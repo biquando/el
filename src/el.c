@@ -1,5 +1,6 @@
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
 #include "memory.h"
 #include "cpu.h"
 
@@ -14,14 +15,17 @@ int main(int argc, char *argv[])
 {
     struct memory *mem;
     struct cpu *proc;
-    int i;
+    int i = 1;
     mem = initialize_memory(0x10000);
     proc = initialize_cpu(mem);
     proc->ip.full = 0x0000;
-    //proc->__debug = __debug;
+    if (argc > 1 && !strncmp("-d", argv[1], 3)) {
+        proc->__debug = __debug;
+        i++;
+    }
 
-    for (i = 1; i < argc; i++) {
-        load_file(mem, argv[i]);
+    while (i < argc) {
+        load_file(mem, argv[i++]);
     }
     
     start_clock(proc, 10);

@@ -1,4 +1,4 @@
-.PHONY: all dirs test clean
+.PHONY: all dirs test debug clean
 
 LASM = ../bin/lasm
 EL = ../bin/el
@@ -19,6 +19,9 @@ dirs:
 
 test: all
 	@$(EL) $(BIN)
+
+debug: all
+	@$(EL) -d $(BIN)
 
 clean:
 	rm -r $(BIN_DIR)/
