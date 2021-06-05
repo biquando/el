@@ -1,1 +1,1 @@
-load * ra *$TEST
+load # rar $TEST

@@ -64,12 +64,13 @@ int main(int argc, char *argv[])
             return 2;
         }
 
-        /* Resolve <Locations> */
+        /* Resolve <Constants> */
         sym->mapping = 1;
         while (1) {
             tmp = fgets(line_buffer, LINE_BUFFER_SIZE, fmap);
             if (!tmp)
                 break;
+            tmp = skip_whitespace(tmp);
             /* Parse line */
             if (tmp[0] == '\0' || (tmp[0] == '/' && tmp[1] == '/')) {
                 continue;
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
     free_buffer(unres_buf);
     rewind(fsrc);
 
-    /* Fill <Locations> and <Labels> */
+    /* Fill <Constants> and <Labels> */
     while (1) {
         tmp = fgets(line_buffer, LINE_BUFFER_SIZE, fsrc);
         if (!tmp)

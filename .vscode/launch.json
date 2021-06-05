@@ -31,6 +31,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/bin/lasm",
             "args": ["./res/src/test.l", "-o", "./res/bin/test", "-m", "./res/src/map.lm"],
+            // "args": ["./res/src/boot.l", "-o", "./res/bin/boot"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
