@@ -20,6 +20,7 @@ struct symtab {
     char **labs;
     unsigned short *vals;
     int resolved_symbols;
+    int mapping;
     unsigned short global;
 };
 

@@ -688,7 +688,7 @@ error:
 void parse_label(char *str, struct buffer *buf, struct symtab *sym)
 {
     unsigned int len = symbol_len(str);
-    char *error_msg = "Invalid label";
+    char *error_msg = "Invalid label", *tmp_str;
     int i;
     if (sym->resolved_symbols)
         goto continue_line;
@@ -702,10 +702,18 @@ void parse_label(char *str, struct buffer *buf, struct symtab *sym)
             goto error;
         }
     }
-    add_symtab(sym, str, len, buf->size + sym->global);
+    if (sym->mapping) {
+        tmp_str = next_symbol(str);
+        add_symtab(sym, str, len, 
+            parse_number(tmp_str, symbol_len(tmp_str), sym, buf));
+    } else {
+        add_symtab(sym, str, len, buf->size + sym->global);
+    }
 
 continue_line:
-    parse_line(next_symbol(str), buf, sym);
+    if (!sym->mapping) {
+        parse_line(next_symbol(str), buf, sym);
+    }
     return;
 
 error:

@@ -12,44 +12,74 @@ int main(int argc, char *argv[])
     int i;
     char *src_name = NULL;
     char *out_name = NULL;
+    char *map_name = NULL;
     FILE *fsrc;
     FILE *fout;
+    FILE *fmap;
     struct buffer *unres_buf = initialize_buffer(256);
     struct buffer *res_buf = initialize_buffer(256);
     struct symtab *sym = initialize_symtab();
     char line_buffer[LINE_BUFFER_SIZE];
     char *tmp;
 
-    /* Parse arguments into src_name and out_name */
-    switch (argc) {
-    case 2:
-        src_name = argv[1];
-        out_name = (char *) DEFAULT_OUT_NAME;
-        break;
-    case 4:
-        if (!strncmp(argv[1], "-o", 3)) {
-            out_name = argv[2];
-            src_name = argv[3];
-            break;
-        } else if (!strncmp(argv[2], "-o", 3)) {
-            src_name = argv[1];
-            out_name = argv[3];
-            break;
+    /* Parse arguments */
+    for (i = 1; i < argc; i++) {
+        if (!strncmp("-o", argv[i], 3) || !strncmp("--out", argv[i], 6)) {
+            if (i == argc - 1 || out_name) {
+                goto arg_error;
+            }
+            out_name = argv[++i];
+            continue;
         }
-        /* Else, fall through */
-    default:
-        fprintf(stderr, "%s: invalid arguments\n", EXEC_NAME);
-        return 1;
+        if (!strncmp("-m", argv[i], 3) || !strncmp("--map", argv[i], 6)) {
+            if (i == argc - 1 || map_name) {
+                goto arg_error;
+            }
+            map_name = argv[++i];
+            continue;
+        }
+        if (src_name) {
+            goto arg_error;
+        }
+        src_name = argv[i];
+        continue;
+
+    arg_error:
+        fprintf(stderr, "%s: error with arg %s\n", EXEC_NAME, argv[i]);
+        return 2;
     }
 
     /* Open src file */
     fsrc = fopen(src_name, "r");
     if (!fsrc) {
-        fprintf(stderr, "%s: could not open file: '%s'\n", EXEC_NAME, src_name);
+        fprintf(stderr, "%s: could not open: %s\n", EXEC_NAME, src_name);
         return 2;
     }
 
-    /* Resolve labels */
+    /* Parse map file */
+    if (map_name) {
+        fmap = fopen(map_name, "r");
+        if (!fmap) {
+            fprintf(stderr, "%s: could not open: %s\n", EXEC_NAME, map_name);
+            return 2;
+        }
+
+        /* Resolve <Locations> */
+        sym->mapping = 1;
+        while (1) {
+            tmp = fgets(line_buffer, LINE_BUFFER_SIZE, fmap);
+            if (!tmp)
+                break;
+            /* Parse line */
+            if (tmp[0] == '\0' || (tmp[0] == '/' && tmp[1] == '/')) {
+                continue;
+            }
+            parse_label(tmp, unres_buf, sym);
+        }
+        sym->mapping = 0;
+    }
+
+    /* Resolve <Labels> */
     while(1) {
         tmp = fgets(line_buffer, LINE_BUFFER_SIZE, fsrc);
         if (!tmp)
@@ -60,7 +90,7 @@ int main(int argc, char *argv[])
     free_buffer(unres_buf);
     rewind(fsrc);
 
-    /* Fill labels */
+    /* Fill <Locations> and <Labels> */
     while (1) {
         tmp = fgets(line_buffer, LINE_BUFFER_SIZE, fsrc);
         if (!tmp)

@@ -64,6 +64,7 @@ struct symtab *initialize_symtab()
     sym->labs = calloc(0, sizeof *sym->labs);
     sym->vals = calloc(0, sizeof *sym->vals);
     sym->resolved_symbols = 0;
+    sym->mapping = 0;
     sym->global = 0;
     return sym;
 }
