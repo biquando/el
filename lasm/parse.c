@@ -406,8 +406,9 @@ void parse_instr(char *str, struct buffer *buf, struct symtab *sym)
                 goto invalid_opr;
             }
         /* <No-op> */
-        } else if (!strncmp(str, "nop", len0) && !arg1) {
+        } else if (!strncmp(str, "nop", len0) && !arg2) {
             opc = 0xff;
+            opr = parse_number(arg1, len1, sym, buf);
         } else {
             goto invalid_instr;
         }
@@ -652,6 +653,25 @@ void parse_macro(char *str, struct buffer *buf, struct symtab *sym)
             add_byte_buffer(tmp_buf, 0x80 | tmp);
             add_byte_buffer(tmp_buf, 3);
             add_byte_buffer(tmp_buf, 0);
+        } else if (!strncmp(str, "TRA", len0)) {
+            tmp = parse_register(arg, len);
+            if (tmp == -1) {
+                error_msg = "Invalid register";
+                goto error;
+            }
+            add_byte_buffer(tmp_buf, 0x10 | tmp);
+            add_byte_buffer(tmp_buf, 0);
+            add_byte_buffer(tmp_buf, 0);
+            add_byte_buffer(tmp_buf, 0x80 | tmp);
+            add_byte_buffer(tmp_buf, 0);
+            
+            arg = next_symbol(arg);
+            tmp = parse_register(arg, symbol_len(arg));
+            if (tmp == -1) {
+                error_msg = "Invalid register";
+                goto error;
+            }
+            add_byte_buffer(tmp_buf, tmp);
         }
     /* <Global> */
     } else if (len0 == 6 && !strncmp(str, "GLOBAL", len0) && arg) {
@@ -704,8 +724,12 @@ void parse_label(char *str, struct buffer *buf, struct symtab *sym)
     }
     if (sym->mapping) {
         tmp_str = next_symbol(str);
-        add_symtab(sym, str, len, 
-            parse_number(tmp_str, symbol_len(tmp_str), sym, buf));
+        i = parse_number(tmp_str, symbol_len(tmp_str), sym, buf);
+        if (i == -1) {
+            error_msg = "Invalid map constant";
+            goto error;
+        }
+        add_symtab(sym, str, len, i);
     } else {
         add_symtab(sym, str, len, buf->size + sym->global);
     }

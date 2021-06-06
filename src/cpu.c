@@ -51,8 +51,6 @@ void start_clock(struct cpu *proc, unsigned int delay_ms)
     struct timespec req, rem;
 
     /* Timing */
-    if (delay_ms == 0)
-        delay_ms = 1;
     delay_sec = delay_ms / 1000;
     delay_nsec = (delay_ms % 1000 * 1000000L);
     req.tv_sec = delay_sec;

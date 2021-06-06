@@ -1,1 +1,8 @@
-$_BOOT 0x0000
+$_STACK  0x8000
+
+// [Boot]
+$_BOOT_L   0x0000
+$_BOOT_ID  1
+
+$FIB_L   0x1000
+$FIB_ID  100

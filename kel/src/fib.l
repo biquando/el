@@ -1,14 +1,15 @@
 // fib.l
 //   Calculate the fibonacci sequence.
-// Arguments:
-//   1: (*addr)  addr of dest array
-//   2: (n)      number of elements
+// Args:
+//   1: addr  addr of dest array
+//   2: n     number of elements
 // Returns:
-//   (n)         same as arg 2
+//   argument 2, 'n'
 
-GLOBAL 0x1100
+GLOBAL $FIB_L
+nop $FIB_ID
 $_init
-    // Load (n) into ra
+    // Load 'n' into ra
     load # rar 4
     mod rar + rsp
     load * ra
@@ -17,12 +18,12 @@ $_init
     cond l
         GOTO $return
 
-    // Set rd to 2 * (n)
+    // Set rd to 2 * 'n'
     load # rd 0
     mod rd + ra
     mod rd + ra
 
-    // Load (*addr) into rar
+    // Load 'addr' into rar
     DEC rar
     load * rar
 

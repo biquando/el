@@ -70,7 +70,17 @@ int main(int argc, char *argv[])
             tmp = fgets(line_buffer, LINE_BUFFER_SIZE, fmap);
             if (!tmp)
                 break;
+            i = strnlen(tmp, LINE_BUFFER_SIZE);
+            if (i < 1) {
+                continue;
+            }
+            if (tmp[i - 1] == '\n') {
+                tmp[i - 1] = '\0';
+            }
             tmp = skip_whitespace(tmp);
+            if (!tmp) {
+                continue;
+            }
             /* Parse line */
             if (tmp[0] == '\0' || (tmp[0] == '/' && tmp[1] == '/')) {
                 continue;

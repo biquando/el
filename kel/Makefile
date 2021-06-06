@@ -1,4 +1,4 @@
-.PHONY: all dirs test debug clean
+.PHONY: all dirs run debug clean
 
 LASM = ../bin/lasm
 EL = ../bin/el
@@ -17,11 +17,11 @@ dirs:
 %.l:
 	@$(LASM) $(SRC_DIR)/$@ -m $(MAP) -o $(BIN_DIR)/$(patsubst %.l,%,$@)
 
-test: all
+run: all
 	@$(EL) $(BIN)
 
 debug: all
-	@$(EL) -d $(BIN)
+	@$(EL) --debug --clock 10 $(BIN)
 
 clean:
 	rm -r $(BIN_DIR)/
