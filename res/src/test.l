@@ -1,4 +1,5 @@
-load # rar $msg
-sig out 0
-sig abort 1
-$msg STR "hello, world\n"
+GLOBAL $TEST
+GOTO $_main
+$_main
+    sig abort 1
+GOTO $MAIN

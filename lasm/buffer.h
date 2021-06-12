@@ -21,6 +21,7 @@ struct symtab {
     unsigned short *vals;
     int resolved_symbols;
     int mapping;
+    int mapped;
     unsigned short global;
 };
 

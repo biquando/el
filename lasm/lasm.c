@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
             parse_label(tmp, unres_buf, sym);
         }
         sym->mapping = 0;
+        sym->mapped = 1;
     }
 
     /* Resolve <Labels> */

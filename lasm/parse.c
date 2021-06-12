@@ -675,10 +675,6 @@ void parse_macro(char *str, struct buffer *buf, struct symtab *sym)
         }
     /* <Global> */
     } else if (len0 == 6 && !strncmp(str, "GLOBAL", len0) && arg) {
-        if (!sym->resolved_symbols && sym->global) {
-            error_msg = "Global already defined";
-            goto error;
-        }
         if (buf->size != 0) {
             error_msg = "Global must be at the beginning of the file";
             goto error;
@@ -760,9 +756,8 @@ int parse_number(char *arg, unsigned int len, struct symtab *sym,
         num = strtol(tmp, NULL, 0) & 0xffff;
         free(tmp);
     } else if (arg[0] == '$' && len > 1) {
-        if (sym->resolved_symbols) {
-            num = get_symtab(sym, arg, len);
-        } else {
+        num = get_symtab(sym, arg, len);
+        if (num == -1 && !sym->resolved_symbols) {
             num = 0;
         }
     } else if (arg[0] == '*' && len > 2) {
