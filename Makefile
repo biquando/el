@@ -1,45 +1,30 @@
 CC = gcc
-CFLAGS = -g
-EL_LDFLAGS = -pthread -g
-LASM_LDFLAGS = -g
 
-EL_SRC = $(wildcard src/*.c)
+# Directories
+INC_DIR = include
+LIB_DIR = lib
+BIN_DIR = bin
+EL_SRC_DIR = src
+LASM_SRC_DIR = lasm
+
+# Flags
+LIBS = -L$(LIB_DIR)/argparse -largparse -L$(LIB_DIR)/vector -lvector -pthread
+FLAGS = -I$(INC_DIR) -g
+
+# Files
+EL_SRC = $(wildcard $(EL_SRC_DIR)/*.c)
 EL_OBJ = $(EL_SRC:.c=.o)
-LASM_SRC = $(wildcard lasm/*.c)
+LASM_SRC = $(wildcard $(LASM_SRC_DIR)/*.c)
 LASM_OBJ = $(LASM_SRC:.c=.o)
-BIN = bin
-L_SRC = $(patsubst %res/src/,%,$(wildcard res/src/*.l))
-L_BIN = $(wildcard res/bin/*)
 
-.PHONY: all test_el el run_el lasm clean_el clean_lasm clean
+.PHONY: all clean
 
-all: dirs el lasm
-
-test_el: dirs el run_el clean_el
-
-dirs:
-	mkdir -p $(BIN)
-
-el: $(EL_OBJ)
-	$(CC) -o $(BIN)/el $^ $(EL_LDFLAGS)
-
-run_el: $(L_BIN)
-	$(BIN)/el $^
-
-lasm: $(LASM_OBJ)
-	$(CC) -o $(BIN)/lasm $^ $(LASM_LDFLAGS)
-
-%.l:
-	$(BIN)/lasm res/src/$@ -o res/bin/$(patsubst %.l,%,$@)
+all: $(EL_OBJ) $(LASM_OBJ)
+	$(CC) -o $(BIN_DIR)/el $(EL_OBJ) $(FLAGS) $(LIBS)
+	$(CC) -o $(BIN_DIR)/lasm $(LASM_OBJ) $(FLAGS) $(LIBS)
 
 %.o: %.c
-	$(CC) -o $@ -c $< $(CFLAGS)
+	$(CC) -o $@ $(FLAGS) -c $<
 
-clean_el:
-	rm $(EL_OBJ)
-
-clean_lasm:
-	rm $(LASM_OBJ)
-
-clean: clean_el clean_lasm
-	rm -r $(BIN)
+clean:
+	rm -f $(EL_OBJ) $(LASM_OBJ)

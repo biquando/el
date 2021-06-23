@@ -13,7 +13,7 @@ struct cpu *initialize_cpu(struct memory *mem)
 {
     struct cpu *proc = calloc(1, sizeof *proc);
     proc->tick = __tick_cpu;
-    
+
     /* Registers */
     proc->a.full = 0;
     proc->b.full = 0;
@@ -65,7 +65,7 @@ void start_clock(struct cpu *proc, unsigned int delay_ms)
     input_pkg.proc = proc;
 
     proc->running = 1;
-    
+
 	while (proc->running) {
         /* Start threads for interrupt handling */
         if (!input_interrupt_flag) {

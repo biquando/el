@@ -1,18 +1,29 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <argparse/argparse.h>
 #include "buffer.h"
 #include "parse.h"
 
 #define LINE_BUFFER_SIZE 256
+#define LASM "lasm"
+
+int parse_error(char *msg)
+{
+    fprintf(stderr, LASM": %s\n", msg);
+    exit(1);
+}
 
 int main(int argc, char *argv[])
 {
-    const char *DEFAULT_OUT_NAME = "a.bin";
-    const char *EXEC_NAME = "lasm";
+    const char *DEFAULT_OUT_NAME = "l.out";
+    const char *EXEC_NAME = LASM;
     int i;
+    struct argparse *ap = argp_init();
     char *src_name = NULL;
     char *out_name = NULL;
     char *map_name = NULL;
+    char **arg_vals = malloc(argc * sizeof *arg_vals);
     FILE *fsrc;
     FILE *fout;
     FILE *fmap;
@@ -23,31 +34,19 @@ int main(int argc, char *argv[])
     char *tmp;
 
     /* Parse arguments */
-    for (i = 1; i < argc; i++) {
-        if (!strncmp("-o", argv[i], 3) || !strncmp("--out", argv[i], 6)) {
-            if (i == argc - 1 || out_name) {
-                goto arg_error;
-            }
-            out_name = argv[++i];
-            continue;
-        }
-        if (!strncmp("-m", argv[i], 3) || !strncmp("--map", argv[i], 6)) {
-            if (i == argc - 1 || map_name) {
-                goto arg_error;
-            }
-            map_name = argv[++i];
-            continue;
-        }
-        if (src_name) {
-            goto arg_error;
-        }
-        src_name = argv[i];
-        continue;
-
-    arg_error:
-        fprintf(stderr, "%s: error with arg %s\n", EXEC_NAME, argv[i]);
-        return 2;
-    }
+    argp_opt(ap, "-o", 1);
+    argp_alias(ap, "--out", "-o");
+    argp_opt(ap, "-m", 1);
+    argp_alias(ap, "--map", "-m");
+    !argp_parse(ap, argc, argv) && parse_error("parse error");
+    i = argp_get_opt(ap, "-o", arg_vals);
+    out_name = i ? arg_vals[0] : (char*) DEFAULT_OUT_NAME;
+    i = argp_get_opt(ap, "-m", arg_vals);
+    map_name = i ? arg_vals[0] : NULL;
+    (argp_get_args(ap, arg_vals) != 1) && parse_error("error with src .l file");
+    src_name = arg_vals[0];
+    argp_free(ap);
+    free(arg_vals);
 
     /* Open src file */
     fsrc = fopen(src_name, "r");

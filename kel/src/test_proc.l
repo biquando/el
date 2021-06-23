@@ -1,0 +1,64 @@
+// (test_proc.l)
+//   A process to test spawning and terminating.
+//   Returns a string of N digits starting from 0.
+// Args:
+//   1. size  memory to allocate
+//   2. N     number of digits  (N: [0, 10])
+// Returns:
+//   addr     address of the array stored in local space
+
+GLOBAL $TEST_PROC_L_GL
+
+$_main
+    // 'size' - 1 -> rc
+    TRA rar rsp
+    load # rx 2
+    load + rc
+    mod rc --
+
+    // 'N' + 0x30 -> ra
+    INC rx
+    load + ra
+    load # rb 0x30
+    mod ra + rb
+
+    // Test for valid N
+    load # rx 0x3a
+    mod ra ? rx
+    cond a
+        load # ra 0x3a
+
+    // local body -> rar
+    load # rar $_GL_SPACE_HEAD
+    load * rx
+    load + rar
+    load # rx 4
+    mod rar + rx
+    load # rx 0
+
+    // for (rb = 0x30, rx = 0; rb != ra && rx != rc; rb++, rx++)
+    $loop
+        // Stopping conditions
+        mod rb ? ra
+        cond e
+            GOTO $loop_exit
+        mod rx ? rc
+        cond e
+            GOTO $loop_exit
+
+        // Store rb in array and increment
+        store + rb
+        mod rb ++
+        mod rx ++
+    GOTO $loop
+    $loop_exit
+
+    // Null byte
+    load # rb 0
+    store + rb
+
+    // Set return value to array address
+    TRA rx rar
+    PSH rx
+
+    CALL $_TERM_GL

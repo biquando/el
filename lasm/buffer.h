@@ -26,7 +26,7 @@ struct symtab {
 };
 
 struct symtab *initialize_symtab();
-void add_symtab(struct symtab *sym, char *lab, unsigned int len, 
+void add_symtab(struct symtab *sym, char *lab, unsigned int len,
                 unsigned short val);
 int get_symtab(struct symtab *sym, char *lab, unsigned int len);
 void free_symtab(struct symtab *sym);

@@ -1,27 +1,22 @@
-.PHONY: all dirs run debug clean
-
+.PHONY: all run debug
 LASM = ../bin/lasm
 EL = ../bin/el
 SRC_DIR = src
 BIN_DIR = bin
 
-SRC = $(patsubst $(SRC_DIR)/%,%,$(wildcard src/*.l))
+SRC = $(wildcard $(SRC_DIR)/*.l)
 MAP = $(SRC_DIR)/map.lm
-BIN = $(wildcard $(BIN_DIR)/*)
+BIN = $(subst $(SRC_DIR),$(BIN_DIR),$(subst .l,,$(SRC)))
 
-all: dirs $(SRC)
+all: $(BIN)
 
-dirs:
-	@mkdir -p $(BIN_DIR)/
-
-%.l:
-	@$(LASM) $(SRC_DIR)/$@ -m $(MAP) -o $(BIN_DIR)/$(patsubst %.l,%,$@)
+$(BIN_DIR)/%: $(SRC_DIR)/%.l
+	$(LASM) $< -m $(MAP) -o $@
 
 run: all
-	@$(EL) $(BIN)
+	$(EL) $(BIN)
 
 debug: all
-	@$(EL) --debug --clock 10 $(BIN)
+	$(EL) --debug $(BIN)
 
 clean:
-	rm -r $(BIN_DIR)/

@@ -1,17 +1,30 @@
-// boot.l
 // [Boot]
-//   Boots the kernel.
-GLOBAL $_BOOT_L
+//   Boot the kernel.
+
+GLOBAL $_BOOT_GL
 nop $_BOOT_ID
 
-$_init
+$_guard
+    load # ha 0
+    load * hb *$guard_flag
+    mod ha ? hb
+    cond e
+        GOTO $_main
+    sig out *$guard_msg 0
+    sig abort 0
+    $guard_msg STR "ERROR: Attempted to access boot\n"
+    $guard_flag RAW 00
+
+$_main
     sig out *$welcome_msg 0
+    load # hx 1
+    store * hx *$guard_flag
     load # rsp $_STACK
 
-    // Verify [Boot]
-    load # rx $_BOOT_ID
+    // Verify [Spawn]
+    load # rx $_SPAWN_ID
     PSH rx
-    load # rx $_BOOT_L
+    load # rx $_SPAWN_GL
     PSH rx
     CALL $_verify
     load # ra 0
@@ -19,10 +32,10 @@ $_init
     cond ne
         GOTO $verify_fail
 
-    // Verify fib.l
-    load # rx $FIB_ID
+    // Verify [Term]
+    load # rx $_TERM_ID
     PSH rx
-    load # rx $FIB_L
+    load # rx $_TERM_GL
     PSH rx
     CALL $_verify
     load # ra 0
@@ -35,10 +48,40 @@ $_init
         sig out *$verify_fail_msg 0
         PSH rx
         TRA rar rsp
-        sig out 2
+        sig out 5
         sig abort 2
     $verify_success
     sig out *$verify_success_msg 0
+
+    // Initiate root process
+    load # rar $_GL_SPACE_HEAD
+    load # rx 2
+    store * rx
+    load # ra $_MAX_PROC_DEPTH
+    mod ra + ra
+    mod ra + rar
+    mod ra + rx
+    store + ra
+    load + rar
+    load # rb 4
+    store * rb
+    store + rsp
+    sig out *$init_root_proc_msg 0
+
+
+    // (test_proc.l)
+    load # rsp $_STACK
+    load # rx 5
+    PSH rx
+    load # rx 11
+    PSH rx
+    load # rx $TEST_PROC_L_GL
+    PSH rx
+    CALL $_SPAWN_GL
+    TRA rar rx
+    sig out 0
+    sig out *$newline 0
+
     sig abort 1
 
 // Verify that a routine was loaded into memory.
@@ -46,9 +89,9 @@ $_init
 //   1. addr  address of the routine
 //   2. id    16-bit identifier of the routine
 // Returns:
-//   0 if success, id if failure
+//   0 if success, 'id' if failure
 $_verify
-    // addr->ra, id->rb
+    // 'addr' -> ra, 'id' -> rb
     load # rar 2
     mod rar + rsp
     load * ra
@@ -72,10 +115,9 @@ $_verify
     mod rb ? rc
     cond ne
         GOTO $_verify_return
-    
+
     // Both tags matched
     load # rx 0
-    RET
 
     $_verify_return
         RET
@@ -84,3 +126,5 @@ $_data
     $welcome_msg         STR "Booting...\n"
     $verify_success_msg  STR "Verification succeeded.\n"
     $verify_fail_msg     STR "Verification failed, id="
+    $init_root_proc_msg  STR "Initiated root process.\n"
+    $newline             STR "\n"
