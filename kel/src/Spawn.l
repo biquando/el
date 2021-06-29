@@ -50,8 +50,6 @@ $_main
     store * rb
     INC rsp
 
-    // Set rip to 'addr' - 3
-    mod rc - rip
-    load # rx 9
-    mod rc - rx
-    mod rip + rc
+    // Set rip to rc
+    PSH rc
+    RET
