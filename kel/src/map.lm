@@ -17,5 +17,9 @@ $_SPAWN_ID  0x11
 $_TERM_GL  0x1100
 $_TERM_ID  0x12
 
+// [GetLocal]
+$_GET_LOCAL_GL  0x1200
+$_GET_LOCAL_ID  0x13
+
 // Testing
 $TEST_PROC_L_GL  0x2000

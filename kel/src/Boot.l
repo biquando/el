@@ -43,6 +43,17 @@ $_main
     cond ne
         GOTO $verify_fail
 
+    // Verify [GetLocal]
+    load # rx $_GET_LOCAL_ID
+    PSH rx
+    load # rx $_GET_LOCAL_GL
+    PSH rx
+    CALL $_verify
+    load # ra 0
+    mod ra ? rx
+    cond ne
+        GOTO $verify_fail
+
     GOTO $verify_success
     $verify_fail
         sig out *$verify_fail_msg 0

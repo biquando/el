@@ -29,11 +29,8 @@ $_main
         load # ra 0x3a
 
     // local body -> rar
-    load # rar $_GL_SPACE_HEAD
-    load * rx
-    load + rar
-    load # rx 4
-    mod rar + rx
+    CALL $_GET_LOCAL_GL
+    TRA rar rx
     load # rx 0
 
     // for (rb = 0x30, rx = 0; rb != ra && rx != rc; rb++, rx++)
