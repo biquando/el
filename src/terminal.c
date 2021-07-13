@@ -33,7 +33,7 @@ void *terminal_input(void *pkg_ptr) {
     int i;
     volatile byte_t *start = pkg.proc->mem->data + pkg.start_addr; 
 
-    fgets((byte_t *) start, pkg.len, stdin);
+    fgets((char *) start, pkg.len, stdin);
     for (i = 0; i < pkg.len; i++) {
         if (start[i] == '\n' || start[i] == '\0') {
             start[i] = '\0';

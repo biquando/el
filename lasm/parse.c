@@ -594,7 +594,7 @@ void parse_macro(char *str, struct buffer *buf, struct symtab *sym)
             tmpcp[len+5] = 0x06;
             tmpcp[len+6] = 0x60 | tmp;
             tmpcp[len+7] = 0xFF;
-            append_buffer(tmp_buf, tmpcp, len + 9);
+            append_buffer(tmp_buf, (unsigned char *) tmpcp, len + 9);
             free(tmpcp);
         /* <Pop> */
         } else if (!strncmp(str, "POP", len0)) {
@@ -619,7 +619,7 @@ void parse_macro(char *str, struct buffer *buf, struct symtab *sym)
             tmpcp[len] = 0x20 | tmp;
             tmpcp[len+1] = 0xFF;
             tmpcp[len+2] = 0xFF;
-            append_buffer(tmp_buf, tmpcp, len + 3);
+            append_buffer(tmp_buf, (unsigned char *) tmpcp, len + 3);
             free(tmpcp);
         /* <Return> */
         } else if (!strncmp(str, "RET", len0) && !arg) {
@@ -761,7 +761,7 @@ int parse_number(char *arg, unsigned int len, struct symtab *sym,
             num = 0;
         }
     } else if (arg[0] == '*' && len > 2) {
-        if (tmp = next_symbol(arg))
+        if ((tmp = next_symbol(arg)))
             num = parse_number(tmp, symbol_len(tmp), sym, buf);
         else
             num = 0;
