@@ -16,15 +16,15 @@ void sig_abort(struct cpu *proc, word_t status)
         break;
     case 1:
         strcpy(id, "ok");
-        fprintf(stdout, "Exited with status 0x%x (%s)\n", status, id);
+        fprintf(stderr, "Exited with status 0x%x (%s)\n", status, id);
         exit(0);
         break;
     }
 
-    fprintf(stdout, "Aborted with status 0x%x", status);
+    fprintf(stderr, "Aborted with status 0x%x", status);
     if (*id)
-        fprintf(stdout, " (%s)", id);
-    fprintf(stdout, "\n");
+        fprintf(stderr, " (%s)", id);
+    fprintf(stderr, "\n");
     exit(!status ? 1 : status);
 }
 
