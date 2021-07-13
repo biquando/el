@@ -766,7 +766,7 @@ int parse_number(char *arg, unsigned int len, struct symtab *sym,
         else
             num = 0;
         tmp = malloc((15 + len) * sizeof *tmp);
-        strncpy(tmp, "load # rar ", 11);
+        strncpy(tmp, "load # rar ", 12);
         parse_instr(strncat(tmp, arg + 1, len), buf, sym);
         free(tmp);
     }

@@ -1,4 +1,4 @@
 bin
 kel/bin
-./*.a
-lib/*/*.a
+*.o
+*.a
