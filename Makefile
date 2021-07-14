@@ -24,13 +24,15 @@ all: $(EL_OBJ) $(LASM_OBJ)
 	$(CC) -o bin/lasm $(LASM_OBJ) $(FLAGS) $(LIBS)
 
 libs:
-	cd lib/argparse && make libs && make
+	make -C lib/argparse
+	make -C lib/vector
 	mv lib/*/*.a .
 
 %.o: %.c
 	$(CC) -o $@ $(FLAGS) -c $<
 
 clean:
+	-make -C lib/argparse clean
+	-make -C lib/vector clean
 	rm -f $(EL_OBJ) $(LASM_OBJ) ./*.a
 	rm -rf bin
-	cd lib/argparse && make clean

@@ -19,7 +19,7 @@ all: $(OBJ)
 	$(CC) -o $@ -c $< $(BUILD_FLAGS)
 
 libs:
-	cd ./lib/vector && make
+	make -C lib/vector
 	cp ./lib/*/*.a .
 
 test: all
@@ -28,6 +28,6 @@ test: all
 	./bin/testargp $(TEST_ARGS)
 
 clean:
-	cd lib/vector && make clean
 	rm -f ./*.a $(OBJ)
 	rm -rf ./bin
+	-make -C lib/vector clean
