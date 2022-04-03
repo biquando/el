@@ -32,21 +32,29 @@ int main(int argc, char *argv[])
     struct symtab *sym = initialize_symtab();
     char line_buffer[LINE_BUFFER_SIZE];
     char *tmp;
+    int debug = 0;
 
     /* Parse arguments */
     argp_opt(ap, "-o", 1);
     argp_alias(ap, "--out", "-o");
     argp_opt(ap, "-m", 1);
     argp_alias(ap, "--map", "-m");
+    argp_opt(ap, "-d", 0);
+    argp_alias(ap, "--debug", "-d");
     !argp_parse(ap, argc, argv) && parse_error("parse error");
     i = argp_get_opt(ap, "-o", arg_vals);
     out_name = i ? arg_vals[0] : (char*) DEFAULT_OUT_NAME;
     i = argp_get_opt(ap, "-m", arg_vals);
     map_name = i ? arg_vals[0] : NULL;
+    debug = argp_get_opt(ap, "-d", arg_vals);
     (argp_get_args(ap, arg_vals) != 1) && parse_error("error with src .l file");
     src_name = arg_vals[0];
     argp_free(ap);
     free(arg_vals);
+
+    if (debug) {
+        fprintf(stderr, "Parsed arguments.\n");
+    }
 
     /* Open src file */
     fsrc = fopen(src_name, "r");
@@ -90,8 +98,16 @@ int main(int argc, char *argv[])
         sym->mapped = 1;
     }
 
+    if (debug) {
+        fprintf(stderr, "Parsed map.\n");
+    }
+
     /* Resolve <Labels> */
+    i = 1;
     while(1) {
+        if (debug) {
+            fprintf(stderr, "Resolving labels, line %d\n", i++);
+        }
         tmp = fgets(line_buffer, LINE_BUFFER_SIZE, fsrc);
         if (!tmp)
             break;
@@ -101,8 +117,16 @@ int main(int argc, char *argv[])
     free_buffer(unres_buf);
     rewind(fsrc);
 
+    if (debug) {
+        fprintf(stderr, "Resolved labels.\n");
+    }
+
     /* Fill <Constants> and <Labels> */
+    i = 1;
     while (1) {
+        if (debug) {
+            fprintf(stderr, "Filling, line %d\n", i++);
+        }
         tmp = fgets(line_buffer, LINE_BUFFER_SIZE, fsrc);
         if (!tmp)
             break;
