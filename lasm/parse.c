@@ -497,7 +497,7 @@ void parse_macro(char *str, struct buffer *buf, struct symtab *sym)
                 error_msg = "Invalid operand";
                 goto error;
             }
-            tmpcp = malloc(14 * sizeof *tmpcp);
+            tmpcp = malloc((20 + strlen(arg)) * sizeof *tmpcp);
             strcpy(tmpcp, "load # rx 18");
             parse_line(tmpcp, buf, sym);
             strcpy(tmpcp, "mod rx + rip");
