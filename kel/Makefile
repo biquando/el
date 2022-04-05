@@ -2,9 +2,9 @@
 LASM = ../bin/lasm
 EL = ../bin/el
 
-SRC = $(wildcard src/*.l)
+SRC = $(wildcard src/*.lasm)
 MAP = src/map.lm
-BIN = $(subst src,bin,$(subst .l,,$(SRC)))
+BIN = $(subst src,bin,$(subst .lasm,,$(SRC)))
 
 all: mkdirs $(BIN)
 
