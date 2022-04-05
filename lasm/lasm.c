@@ -1,6 +1,7 @@
-#include <stdio.h>
+#include "lasm.yy.h"
 
 int main(void)
 {
-	printf("hello, world\n");
+	yylex();
+	return 0;
 }
