@@ -1,8 +1,8 @@
 #ifndef _LASM_LASM_H
 #define _LASM_LASM_H
 
-void init_llex();
-void set_state(int sc);
+void llex_init();
+void llex_set_state(int sc);
 
 int handle_instr(char *token);
 int handle_macro(char *token);

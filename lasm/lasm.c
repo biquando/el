@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
-	init_llex();
+	llex_init();
 	yylex();
 	fclose(yyin);
 	return lasm_ret;
@@ -83,13 +83,14 @@ int handle_addrmode(char *token)
 
 int handle_newline(char *token)
 {
+	llex_set_state(LINE_START);
 	return 0;
 }
 
 
 int handle_unknown(char *token)
 {
-	printf("Unknown token on line %d\n", yylineno);
+	printf("Invalid token on line %d\n", yylineno);
 	lasm_ret = 2;
 	return 1;
 }

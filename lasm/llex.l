@@ -20,32 +20,32 @@ space [ \t]
 
 %%
 
-<LINE_START>{instr} {handle_instr(yytext);}
-<LINE_START>{macro} {handle_macro(yytext);}
-{comment} {handle_comment(yytext);}
-{label} {handle_label(yytext);}
-<LINE_START>{label} {handle_labeldef(yytext);}
-{number} {handle_number(yytext);}
-{string} {handle_string(yytext);}
-{char} {handle_char(yytext);}
-{register} {handle_register(yytext);}
-{signal} {handle_signal(yytext);}
-{implied} {handle_implied(yytext);}
-{addrmode} {handle_addrmode(yytext);}
+<LINE_START>{instr} {if (handle_instr(yytext)) yyterminate();}
+<LINE_START>{macro} {if (handle_macro(yytext)) yyterminate();}
+{comment} {if (handle_comment(yytext)) yyterminate();}
+{label} {if (handle_label(yytext)) yyterminate();}
+<LINE_START>{label} {if (handle_labeldef(yytext)) yyterminate();}
+{number} {if (handle_number(yytext)) yyterminate();}
+{string} {if (handle_string(yytext)) yyterminate();}
+{char} {if (handle_char(yytext)) yyterminate();}
+{register} {if (handle_register(yytext)) yyterminate();}
+{signal} {if (handle_signal(yytext)) yyterminate();}
+{implied} {if (handle_implied(yytext)) yyterminate();}
+{addrmode} {if (handle_addrmode(yytext)) yyterminate();}
 {space} {}
-\n {handle_newline(yytext);}
-. {handle_unknown(yytext); yyterminate();}
+\n {if (handle_newline(yytext)) yyterminate();}
+. {if (handle_unknown(yytext)) yyterminate();}
 
 %%
 
 int yywrap(void) {return 1;}
 
-void init_llex()
+void llex_init()
 {
 	BEGIN LINE_START;
 }
 
-void set_state(int sc)
+void llex_set_state(int sc)
 {
 	BEGIN sc;
 }
