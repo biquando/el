@@ -2,3 +2,4 @@ bin
 kel/bin
 *.o
 *.a
+*.swp
