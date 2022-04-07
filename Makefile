@@ -14,15 +14,13 @@ FLAGS = -I$(INC_DIR) -g
 # Files
 EL_SRC = $(wildcard $(EL_SRC_DIR)/*.c)
 EL_OBJ = $(EL_SRC:.c=.o)
-LASM_SRC = $(wildcard $(LASM_SRC_DIR)/*.c)
-LASM_OBJ = $(LASM_SRC:.c=.o)
 
 .PHONY: all libs clean
 
-all: $(EL_OBJ) $(LASM_OBJ)
+all: $(EL_OBJ)
 	mkdir -p $(BIN_DIR)
 	$(CC) -o $(BIN_DIR)/el $(EL_OBJ) $(FLAGS) $(LIBS)
-	$(CC) -o $(BIN_DIR)/lasm $(LASM_OBJ) $(FLAGS) $(LIBS)
+	-$(MAKE) -C $(LASM_SRC_DIR)
 
 libs:
 	make -C $(LIB_DIR)/argparse
@@ -33,7 +31,8 @@ libs:
 	$(CC) -o $@ $(FLAGS) -c $<
 
 clean:
-	-make -C $(LIB_DIR)/argparse clean
-	-make -C $(LIB_DIR)/vector clean
-	rm -f $(EL_OBJ) $(LASM_OBJ) ./*.a
+	-$(MAKE) -C $(LIB_DIR)/argparse clean
+	-$(MAKE) -C $(LIB_DIR)/vector clean
+	-$(MAKE) -C $(LASM_SRC_DIR) clean
+	rm -f $(EL_OBJ) ./*.a
 	rm -rf $(BIN_DIR)
