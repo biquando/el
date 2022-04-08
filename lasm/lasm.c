@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
 	struct argparse *argp = argp_init();
 	char **argvals = malloc(argc * sizeof *argvals);
 	int nargs;
-	char *err_msg;
 	if (!argp_parse(argp, argc, argv)) {
 		fprintf(stderr, LERR("There was an error with parsing arguments"
 					".\n"));
