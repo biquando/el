@@ -23,8 +23,8 @@ condition o|no|b|c|nb|nc|e|z|ne|nz|na|a|s|ns|l|nl|ng|g
 addrmode #|\*|\+
 space [ \t]+
 
-%s MOD
-%s RAW
+%s MODSC
+%s RAWSC
 
 %%
 
@@ -32,14 +32,14 @@ space [ \t]+
 {macro} {if (handle_macro(yytext, par)) yyterminate();}
 {comment} {if (handle_comment(yytext, par)) yyterminate();}
 {label} {if (handle_label(yytext, par)) yyterminate();}
-<RAW>{raw} {if (handle_raw(yytext, par)) yyterminate();}
+<RAWSC>{raw} {if (handle_raw(yytext, par)) yyterminate();}
 {number} {if (handle_number(yytext, par)) yyterminate();}
 {string} {if (handle_string(yytext, par)) yyterminate();}
 {char} {if (handle_char(yytext, par)) yyterminate();}
 {register} {if (handle_register(yytext, par)) yyterminate();}
 {signal} {if (handle_signal(yytext, par)) yyterminate();}
 {implied} {if (handle_implied(yytext, par)) yyterminate();}
-<MOD>{operation} {if (handle_operation(yytext, par)) yyterminate();}
+<MODSC>{operation} {if (handle_operation(yytext, par)) yyterminate();}
 {condition} {if (handle_condition(yytext, par)) yyterminate();}
 {addrmode} {if (handle_addrmode(yytext, par)) yyterminate();}
 {space} {}
@@ -50,9 +50,12 @@ space [ \t]+
 
 int yywrap(void) {return 1;}
 
-void llex_init()
+int llex_init()
 {
 	par = par_init();
+	if (!par)
+		return 0;
+	return 1;
 }
 
 void llex_set_state(int sc)

@@ -36,7 +36,12 @@ int main(int argc, char *argv[])
 				FITALIC"%s"FRESET"\n"), argvals[0]);
 	}
 
-	llex_init();
+	if (!llex_init()) {
+		fprintf(stderr, LERR("There was a problem with initializing. "
+					"Try again.\n"));
+		lasm_ret = 2;
+		goto cleanup;
+	}
 	yylex();
 
 cleanup:
