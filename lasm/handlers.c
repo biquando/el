@@ -32,15 +32,15 @@ int handle_label(char *token, struct parser *par)
 	return 0;
 }
 
+int handle_raw(char *token, struct parser *par)
+{
+	return 0;
+}
 int handle_number(char *token, struct parser *par)
 {
 	return 0;
 }
 
-int handle_raw(char *token, struct parser *par)
-{
-	return 0;
-}
 
 int handle_string(char *token, struct parser *par)
 {
