@@ -16,6 +16,9 @@ int handle_instr(char *token, struct parser *par)
 
 int handle_macro(char *token, struct parser *par)
 {
+	if (strcmp(token, "RAW") == 0) {
+		llex_set_state(RAW);
+	}
 	return 0;
 }
 
@@ -30,6 +33,11 @@ int handle_label(char *token, struct parser *par)
 }
 
 int handle_number(char *token, struct parser *par)
+{
+	return 0;
+}
+
+int handle_raw(char *token, struct parser *par)
 {
 	return 0;
 }

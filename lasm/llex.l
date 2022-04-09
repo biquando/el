@@ -11,7 +11,8 @@ instr load|store|mod|cond|sig|nop
 macro GOTO|RAW|INT|CHA|STR|GLOBAL|PSH|POP|CALL|RET|INC|DEC|TRA
 comment \/\/.*$
 label \$[a-zA-Z0-9_]+
-number ([0-9]+)|([0-9a-fA-F]{2})|(0x[0-9a-fA-F]+)
+number ([0-9]+)|(0x[0-9a-fA-F]+)
+raw ([0-9a-fA-F]{2}[ ])*([0-9a-fA-F]{2})
 string \"([^\\\"]|\\.)*\"
 char \'([^\\\']|\\.)\'
 register [rh](a|b|c|d|x|ar|sp|ip)
@@ -23,6 +24,7 @@ addrmode #|\*|\+
 space [ \t]+
 
 %s MOD
+%s RAW
 
 %%
 
@@ -30,6 +32,7 @@ space [ \t]+
 {macro} {if (handle_macro(yytext, par)) yyterminate();}
 {comment} {if (handle_comment(yytext, par)) yyterminate();}
 {label} {if (handle_label(yytext, par)) yyterminate();}
+<RAW>{raw} {if (handle_raw(yytext, par)) yyterminate();}
 {number} {if (handle_number(yytext, par)) yyterminate();}
 {string} {if (handle_string(yytext, par)) yyterminate();}
 {char} {if (handle_char(yytext, par)) yyterminate();}
