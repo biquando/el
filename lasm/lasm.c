@@ -4,20 +4,7 @@
 
 #include "llex.yy.h"
 #include "lasm.h"
-
-#define FBOLD    "\x1b[1m"
-#define FITALIC  "\x1b[3m"
-#define FUNDER   "\x1b[4m"
-#define FRED     "\x1b[31m"
-#define FGREEN   "\x1b[32m"
-#define FYELLOW  "\x1b[33m"
-#define FBLUE    "\x1b[34m"
-#define FMAGENTA "\x1b[35m"
-#define FCYAN    "\x1b[36m"
-#define FRESET   "\x1b[0m"
-
-#define LERR(msg) FBOLD "lasm: " FRED "Error: " FRESET msg
-#define LWARN(msg) FBOLD "lasm: " FYELLOW "Warning: " FRESET msg
+#include "style.h"
 
 int lasm_ret = 0;
 
@@ -56,5 +43,6 @@ cleanup:
 	fclose(yyin);
 	argp_free(argp);
 	free(argvals);
+	llex_cleanup();
 	return lasm_ret;
 }

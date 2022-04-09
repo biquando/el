@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include "lasm.h"
 #include "handlers.h"
+#include "parser.h"
+
+static struct parser *par;
 %}
 
 instr load|store|mod|cond|sig|nop
@@ -23,31 +26,38 @@ space [ \t]+
 
 %%
 
-{instr} {if (handle_instr(yytext)) yyterminate();}
-{macro} {if (handle_macro(yytext)) yyterminate();}
-{comment} {if (handle_comment(yytext)) yyterminate();}
-{label} {if (handle_label(yytext)) yyterminate();}
-{number} {if (handle_number(yytext)) yyterminate();}
-{string} {if (handle_string(yytext)) yyterminate();}
-{char} {if (handle_char(yytext)) yyterminate();}
-{register} {if (handle_register(yytext)) yyterminate();}
-{signal} {if (handle_signal(yytext)) yyterminate();}
-{implied} {if (handle_implied(yytext)) yyterminate();}
-<MOD>{operation} {if (handle_operation(yytext)) yyterminate();}
-{condition} {if (handle_condition(yytext)) yyterminate();}
-{addrmode} {if (handle_addrmode(yytext)) yyterminate();}
+{instr} {if (handle_instr(yytext, par)) yyterminate();}
+{macro} {if (handle_macro(yytext, par)) yyterminate();}
+{comment} {if (handle_comment(yytext, par)) yyterminate();}
+{label} {if (handle_label(yytext, par)) yyterminate();}
+{number} {if (handle_number(yytext, par)) yyterminate();}
+{string} {if (handle_string(yytext, par)) yyterminate();}
+{char} {if (handle_char(yytext, par)) yyterminate();}
+{register} {if (handle_register(yytext, par)) yyterminate();}
+{signal} {if (handle_signal(yytext, par)) yyterminate();}
+{implied} {if (handle_implied(yytext, par)) yyterminate();}
+<MOD>{operation} {if (handle_operation(yytext, par)) yyterminate();}
+{condition} {if (handle_condition(yytext, par)) yyterminate();}
+{addrmode} {if (handle_addrmode(yytext, par)) yyterminate();}
 {space} {}
-\n {if (handle_newline(yytext)) yyterminate();}
-. {if (handle_unknown(yytext)) yyterminate();}
+\n {if (handle_newline(yytext, par)) yyterminate();}
+. {if (handle_unknown(yytext, par)) yyterminate();}
 
 %%
 
 int yywrap(void) {return 1;}
 
 void llex_init()
-{}
+{
+	par = par_init();
+}
 
 void llex_set_state(int sc)
 {
 	BEGIN sc;
+}
+
+void llex_cleanup()
+{
+	par_free(par);
 }
