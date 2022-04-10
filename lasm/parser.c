@@ -24,6 +24,7 @@ int par_add_token(struct parser *par, enum token_type type, char *text)
 
 	par->statement[par->token_idx].type = type;
 	par->statement[par->token_idx].text = text;
+	(par->token_idx)++;
 	return 1;
 }
 
