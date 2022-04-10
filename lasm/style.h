@@ -13,6 +13,8 @@
 #define FRESET   "\x1b[0m"
 
 #define LERR(msg) FBOLD "lasm: " FRED "Error: " FRESET msg
+#define LERRL(msg) LERR(FBOLD "(line %d) " FRESET) msg
 #define LWARN(msg) FBOLD "lasm: " FYELLOW "Warning: " FRESET msg
+#define LWARNL(msg) LWARN(FBOLD "(line %d) " FRESET) msg
 
 #endif

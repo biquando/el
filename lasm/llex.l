@@ -28,23 +28,23 @@ space [ \t]+
 
 %%
 
-{instr} {if (handle_instr(yytext, par)) yyterminate();}
-{macro} {if (handle_macro(yytext, par)) yyterminate();}
-{comment} {if (handle_comment(yytext, par)) yyterminate();}
-{label} {if (handle_label(yytext, par)) yyterminate();}
-<RAWSC>{raw} {if (handle_raw(yytext, par)) yyterminate();}
-{number} {if (handle_number(yytext, par)) yyterminate();}
-{string} {if (handle_string(yytext, par)) yyterminate();}
-{char} {if (handle_char(yytext, par)) yyterminate();}
-{register} {if (handle_register(yytext, par)) yyterminate();}
-{signal} {if (handle_signal(yytext, par)) yyterminate();}
-{implied} {if (handle_implied(yytext, par)) yyterminate();}
-<MODSC>{operation} {if (handle_operation(yytext, par)) yyterminate();}
-{condition} {if (handle_condition(yytext, par)) yyterminate();}
-{addrmode} {if (handle_addrmode(yytext, par)) yyterminate();}
+{instr} {if (!handle_instr(yytext, par)) yyterminate();}
+{macro} {if (!handle_macro(yytext, par)) yyterminate();}
+{comment} {if (!handle_comment(yytext, par)) yyterminate();}
+{label} {if (!handle_label(yytext, par)) yyterminate();}
+<RAWSC>{raw} {if (!handle_raw(yytext, par)) yyterminate();}
+{number} {if (!handle_number(yytext, par)) yyterminate();}
+{string} {if (!handle_string(yytext, par)) yyterminate();}
+{char} {if (!handle_char(yytext, par)) yyterminate();}
+{register} {if (!handle_register(yytext, par)) yyterminate();}
+{signal} {if (!handle_signal(yytext, par)) yyterminate();}
+{implied} {if (!handle_implied(yytext, par)) yyterminate();}
+<MODSC>{operation} {if (!handle_operation(yytext, par)) yyterminate();}
+{condition} {if (!handle_condition(yytext, par)) yyterminate();}
+{addrmode} {if (!handle_addrmode(yytext, par)) yyterminate();}
 {space} {}
-\n {if (handle_newline(yytext, par)) yyterminate();}
-. {if (handle_unknown(yytext, par)) yyterminate();}
+\n {if (!handle_newline(yytext, par)) yyterminate();}
+. {if (!handle_unknown(yytext, par)) yyterminate();}
 
 %%
 
