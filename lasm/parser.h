@@ -41,6 +41,7 @@ int par_add_token(struct parser *par, enum token_type type, char *text);
 int par_add_symbol(struct parser *par, char *name, int value, int size);
 int par_add_ref(struct parser *par, char *name, int size);
 int par_write_byte(struct parser *par, unsigned char b);
+void par_resolve_refs(struct parser *par);
 void par_free(struct parser *par);
 
 #endif

@@ -19,7 +19,7 @@ struct parser *par_init()
 	par->out_buf = vec_init(sizeof(unsigned char),
 			BUF_DEFAULT_SIZE);
 
-	if (!par->symbol_table || !par->symbol_table || !par->out_buf)
+	if (!par->symbol_table || !par->ref_table || !par->out_buf)
 		return NULL;
 
 	return par;
@@ -87,9 +87,24 @@ int par_write_byte(struct parser *par, unsigned char b)
 	return vec_push_back(par->out_buf, &b);
 }
 
+void par_resolve_refs(struct parser *par)
+{
+	for (int i = 0; i < par->ref_table->n_elems; i++) {
+		struct ref_entry *r = vec_get(par->ref_table, i);
+		struct symbol_entry *s = vec_get(par->symbol_table, r->sym_idx);
+
+		for (int b = 0; b < r->size; b++) {
+			unsigned char *p = vec_get(par->out_buf,
+					r->location + b);
+			*p = (unsigned char) (s->value >> (8 * b));
+		}
+	}
+}
+
 void par_free(struct parser *par)
 {
 	vec_free(par->symbol_table);
+	vec_free(par->ref_table);
 	vec_free(par->out_buf);
 	free(par);
 }
