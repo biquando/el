@@ -18,14 +18,13 @@ struct token {
 
 struct symbol_entry {
 	char *name;
-	int value; /* values are one or two bytes long */
-	int size;  /* (value & 0xFF) or (value & 0xFFFF) */
+	int value;
 };
 
 struct ref_entry {
 	int location;
 	int sym_idx;
-	int size; /* we will check that this matches the corresponding symbol */
+	int size;
 };
 
 struct parser {
@@ -38,7 +37,7 @@ struct parser {
 
 struct parser *par_init();
 int par_add_token(struct parser *par, enum token_type type, char *text);
-int par_add_symbol(struct parser *par, char *name, int value, int size);
+int par_add_symbol(struct parser *par, char *name, int value);
 int par_add_ref(struct parser *par, char *name, int size);
 int par_write_byte(struct parser *par, unsigned char b);
 void par_resolve_refs(struct parser *par);

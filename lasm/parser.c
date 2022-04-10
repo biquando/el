@@ -38,7 +38,7 @@ int par_add_token(struct parser *par, enum token_type type, char *text)
 }
 
 /* Returns 1 if success, 0 otherwise */
-int par_add_symbol(struct parser *par, char *name, int value, int size)
+int par_add_symbol(struct parser *par, char *name, int value)
 {
 	struct symbol_entry sym;
 
@@ -51,7 +51,6 @@ int par_add_symbol(struct parser *par, char *name, int value, int size)
 
 	sym.name = name;
 	sym.value = value;
-	sym.size = size;
 
 	return vec_push_back(par->symbol_table, &sym);
 }
@@ -66,8 +65,6 @@ int par_add_ref(struct parser *par, char *name, int size)
 	for (int i = 0; i < par->symbol_table->n_elems; i++) {
 		struct symbol_entry *s = vec_get(par->symbol_table, i);
 		if (strcmp(s->name, name) == 0) {
-			if (s->size != size)
-				return 0;
 			ref.sym_idx = i;
 			break;
 		}
