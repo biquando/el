@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <vector/vector.h>
 #include "parser.h"
 
 struct parser *par_init()
@@ -13,11 +14,12 @@ struct parser *par_init()
 
 	par->symbol_table = vec_init(sizeof(struct symbol_entry),
 			BUF_DEFAULT_SIZE);
-	if (!par->symbol_table)
-		return NULL;
+	par->ref_table = vec_init(sizeof(struct ref_entry),
+			BUF_DEFAULT_SIZE);
+	par->out_buf = vec_init(sizeof(unsigned char),
+			BUF_DEFAULT_SIZE);
 
-	par->out_buf = vec_init(sizeof(unsigned char), BUF_DEFAULT_SIZE);
-	if (!par->out_buf)
+	if (!par->symbol_table || !par->symbol_table || !par->out_buf)
 		return NULL;
 
 	return par;
@@ -52,6 +54,31 @@ int par_add_symbol(struct parser *par, char *name, int value, int size)
 	sym.size = size;
 
 	return vec_push_back(par->symbol_table, &sym);
+}
+
+/* Returns 1 if success, 0 otherwise */
+int par_add_ref(struct parser *par, char *name, int size)
+{
+	struct ref_entry ref;
+	ref.sym_idx = -1;
+
+	/* Look for symbol of the same name */
+	for (int i = 0; i < par->symbol_table->n_elems; i++) {
+		struct symbol_entry *s = vec_get(par->symbol_table, i);
+		if (strcmp(s->name, name) == 0) {
+			if (s->size != size)
+				return 0;
+			ref.sym_idx = i;
+			break;
+		}
+	}
+	if (ref.sym_idx == -1)
+		return 0;
+
+	ref.location = (int) par->out_buf->n_elems;
+	ref.size = size;
+
+	return vec_push_back(par->ref_table, &ref);
 }
 
 /* Returns 1 if success, 0 otherwise */
