@@ -21,6 +21,10 @@
 	return 0; \
 }
 
+#define CHECK_FIRST(first_type, first, pos) (par->token_idx == pos \
+		&& par->statement[0].type == first_type \
+		&& strcmp(par->statement[0].text, first) == 0)
+
 int handle_instr(char *token, struct parser *par)
 {
 	if (strcmp(token, "mod") == 0) {
@@ -94,10 +98,8 @@ int handle_operation(char *token, struct parser *par)
 
 int handle_condition(char *token, struct parser *par)
 {
-	const int i = par->token_idx;
 	CHECK_SPACE();
-	if (i != 2 || par->statement[0].type != INSTR
-			|| strcmp(par->statement[0].text, "cond") != 0) {
+	if (!CHECK_FIRST(INSTR, "cond", 2)) {
 		fprintf(stderr, LERRL("Invalid use of condition `%s`.\n"),
 				yylineno, token);
 		lasm_ret = 0x10 + CONDITION;
