@@ -42,7 +42,7 @@ space [ \t]+
 <MODSC>{operation} {if (!handle_operation(yytext, par)) yyterminate();}
 {condition} {if (!handle_condition(yytext, par)) yyterminate();}
 {addrmode} {if (!handle_addrmode(yytext, par)) yyterminate();}
-{space} {}
+{space} {if (!handle_space(yytext, par)) yyterminate();}
 \n {if (!handle_newline(yytext, par)) yyterminate();}
 . {if (!handle_unknown(yytext, par)) yyterminate();}
 

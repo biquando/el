@@ -28,13 +28,27 @@ struct parser *par_init()
 /* Returns 1 if success, 0 otherwise */
 int par_add_token(struct parser *par, enum token_type type, char *text)
 {
+	char *token;
 	if (par->token_idx >= MAX_STATEMENT_SIZE)
 		return 0;
 
 	par->statement[par->token_idx].type = type;
-	par->statement[par->token_idx].text = text;
+	token = malloc(sizeof *text * (strlen(text) + 1));
+	if (!token)
+		return 0;
+	par->statement[par->token_idx].text = token;
+	strcpy(par->statement[par->token_idx].text, text);
 	(par->token_idx)++;
+
 	return 1;
+}
+
+void par_end_statement(struct parser *par)
+{
+	for (int i = 0; i < par->token_idx; i++) {
+		free(par->statement[i].text);
+	}
+	par->token_idx = 0;
 }
 
 /* Returns 1 if success, 0 otherwise */
@@ -100,6 +114,7 @@ void par_resolve_refs(struct parser *par)
 
 void par_free(struct parser *par)
 {
+	par_end_statement(par);
 	vec_free(par->symbol_table);
 	vec_free(par->ref_table);
 	vec_free(par->out_buf);
