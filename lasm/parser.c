@@ -28,15 +28,15 @@ struct parser *par_init()
 /* Returns 1 if success, 0 otherwise */
 int par_add_token(struct parser *par, enum token_type type, char *text)
 {
-	char *token;
+	char *text_cpy;
 	if (par->token_idx >= MAX_STATEMENT_SIZE)
 		return 0;
 
 	par->statement[par->token_idx].type = type;
-	token = malloc(sizeof *text * (strlen(text) + 1));
-	if (!token)
+	text_cpy = malloc(sizeof *text * (strlen(text) + 1));
+	if (!text_cpy)
 		return 0;
-	par->statement[par->token_idx].text = token;
+	par->statement[par->token_idx].text = text_cpy;
 	strcpy(par->statement[par->token_idx].text, text);
 	(par->token_idx)++;
 
@@ -55,6 +55,7 @@ void par_end_statement(struct parser *par)
 int par_add_symbol(struct parser *par, char *name, int value)
 {
 	struct symbol_entry sym;
+	char *name_cpy;
 
 	/* Check if symbol already defined */
 	for (int i = 0; i < par->symbol_table->n_elems; i++) {
@@ -63,7 +64,11 @@ int par_add_symbol(struct parser *par, char *name, int value)
 			return 0;
 	}
 
-	sym.name = name;
+	name_cpy = malloc(sizeof *name * (strlen(name) + 1));
+	if (!name_cpy)
+		return 0;
+	strcpy(name_cpy, name);
+	sym.name = name_cpy;
 	sym.value = value;
 
 	return vec_push_back(par->symbol_table, &sym);
@@ -115,6 +120,10 @@ void par_resolve_refs(struct parser *par)
 void par_free(struct parser *par)
 {
 	par_end_statement(par);
+	for (int i = 0; i < par->symbol_table->n_elems; i++) {
+		struct symbol_entry *sym = vec_get(par->symbol_table, i);
+		free(sym->name);
+	}
 	vec_free(par->symbol_table);
 	vec_free(par->ref_table);
 	vec_free(par->out_buf);
