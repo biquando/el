@@ -16,7 +16,7 @@ raw ([0-9a-fA-F]{2}[ ])*([0-9a-fA-F]{2})
 string \"([^\\\"]|\\.)*\"
 char \'([^\\\']|\\.)\'
 register [rh](a|b|c|d|x|ar|sp|ip)
-signal out|abort
+signal abort|out
 implied \*{label}
 operation \+|-|\+\+|--|&|\||\^|~|\<\<|\>\>|\/\>|\?
 condition o|no|b|c|nb|nc|e|z|ne|nz|na|a|s|ns|l|nl|ng|g

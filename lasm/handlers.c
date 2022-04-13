@@ -21,9 +21,15 @@
 	return 0; \
 }
 
-#define CHECK_FIRST(first_type, first, pos) (par->token_idx == pos \
-		&& par->statement[0].type == first_type \
-		&& strcmp(par->statement[0].text, first) == 0)
+#define CHECK_CNTXT(cntxt_type, cntxt, cntxt_pos, pos) (par->token_idx == pos \
+		&& par->statement[cntxt_pos].type == cntxt_type \
+		&& strcmp(par->statement[cntxt_pos].text, cntxt) == 0)
+
+#define INVALID_USE(name, type) \
+		fprintf(stderr, LERRL("Invalid use of "name" `%s`.\n"), \
+				yylineno, token); \
+		lasm_ret = 0x10 + type; \
+		return 0
 
 int handle_instr(char *token, struct parser *par)
 {
@@ -58,6 +64,9 @@ int handle_label(char *token, struct parser *par)
 
 int handle_raw(char *token, struct parser *par)
 {
+	if (!CHECK_CNTXT(MACRO, "RAW", 0, 2)) {
+		INVALID_USE("raw", RAW);
+	}
 	return par_add_token(par, RAW, token);
 }
 
@@ -68,49 +77,86 @@ int handle_number(char *token, struct parser *par)
 
 int handle_string(char *token, struct parser *par)
 {
+	if (!CHECK_CNTXT(MACRO, "STR", 0, 2)) {
+		INVALID_USE("string", STRING);
+	}
 	return par_add_token(par, STRING, token);
 }
 
 int handle_char(char *token, struct parser *par)
 {
+	if (!CHECK_CNTXT(MACRO, "CHA", 0, 2)) {
+		INVALID_USE("character", CHAR);
+	}
 	return par_add_token(par, CHAR, token);
 }
 
 int handle_register(char *token, struct parser *par)
 {
+	CHECK_SPACE();
+	if (
+			   !CHECK_CNTXT(INSTR, "load", 0, 4)
+			&& !CHECK_CNTXT(INSTR, "store", 0, 4)
+			&& !CHECK_CNTXT(INSTR, "mod", 0, 2)
+			&& !(CHECK_CNTXT(INSTR, "mod", 0, 6)
+			/* This context shall not be used with the following
+			 * mod operations. */
+				&& !(
+					   CHECK_CNTXT(OPERATION, "++", 4, 6)
+					|| CHECK_CNTXT(OPERATION, "--", 4, 6)
+					|| CHECK_CNTXT(OPERATION, "~", 4, 6)
+				))
+			&& !CHECK_CNTXT(MACRO, "PSH", 0, 2)
+			&& !CHECK_CNTXT(MACRO, "POP", 0, 2)
+			&& !CHECK_CNTXT(MACRO, "INC", 0, 2)
+			&& !CHECK_CNTXT(MACRO, "DEC", 0, 2)
+			&& !CHECK_CNTXT(MACRO, "TRA", 0, 2)
+			&& !CHECK_CNTXT(MACRO, "TRA", 0, 4)) {
+		INVALID_USE("register", REGISTER);
+	}
 	return par_add_token(par, REGISTER, token);
 }
 
 int handle_signal(char *token, struct parser *par)
 {
+	CHECK_SPACE();
+	if (!CHECK_CNTXT(INSTR, "sig", 0, 2)) {
+		INVALID_USE("signal", SIGNAL);
+	}
 	return par_add_token(par, SIGNAL, token);
 }
 
 int handle_implied(char *token, struct parser *par)
 {
+	CHECK_SPACE();
 	return par_add_token(par, IMPLIED, token);
 }
 
 int handle_operation(char *token, struct parser *par)
 {
+	CHECK_SPACE();
+	if (!CHECK_CNTXT(INSTR, "mod", 0, 4)) {
+		INVALID_USE("operation", OPERATION);
+	}
 	return par_add_token(par, OPERATION, token);
 }
 
 int handle_condition(char *token, struct parser *par)
 {
 	CHECK_SPACE();
-	if (!CHECK_FIRST(INSTR, "cond", 2)) {
-		fprintf(stderr, LERRL("Invalid use of condition `%s`.\n"),
-				yylineno, token);
-		lasm_ret = 0x10 + CONDITION;
-		return 0;
+	if (!CHECK_CNTXT(INSTR, "cond", 0, 2)) {
+		INVALID_USE("condition", CONDITION);
 	}
-
 	return par_add_token(par, CONDITION, token);
 }
 
 int handle_addrmode(char *token, struct parser *par)
 {
+	CHECK_SPACE();
+	if (!CHECK_CNTXT(INSTR, "load", 0, 2)
+			&& !CHECK_CNTXT(INSTR, "store", 0, 2)) {
+		INVALID_USE("addressing mode", ADDRMODE);
+	}
 	return par_add_token(par, ADDRMODE, token);
 }
 
