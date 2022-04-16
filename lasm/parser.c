@@ -33,7 +33,7 @@ int par_add_token(struct parser *par, enum token_type type, char *text)
 		return 0;
 
 	par->statement[par->token_idx].type = type;
-	text_cpy = malloc(sizeof *text * (strlen(text) + 1));
+	text_cpy = malloc(strlen(text) + 1);
 	if (!text_cpy)
 		return 0;
 	par->statement[par->token_idx].text = text_cpy;
@@ -64,7 +64,7 @@ int par_add_symbol(struct parser *par, char *name, int value)
 			return 0;
 	}
 
-	name_cpy = malloc(sizeof *name * (strlen(name) + 1));
+	name_cpy = malloc(strlen(name) + 1);
 	if (!name_cpy)
 		return 0;
 	strcpy(name_cpy, name);

@@ -2,7 +2,6 @@
 #define _LASM_HANDLERS_H
 
 #include "parser.h"
-#include "style.h"
 
 extern int lasm_ret;
 

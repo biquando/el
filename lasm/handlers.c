@@ -5,13 +5,7 @@
 #include "llex.yy.h"
 #include "handlers.h"
 #include "lasm.h"
-
-#define CHECK_START(name, type) if (par->token_idx != 0) { \
-	fprintf(stderr, LERRL(name " `%s` must be at the start of line.\n"), \
-			yylineno, token); \
-	lasm_ret = 0x10 + type; \
-	return 0; \
-}
+#include "style.h"
 
 #define CHECK_SPACE() if (par->token_idx > 0 \
 		&& par->statement[par->token_idx - 1].type != SPACE) { \
@@ -21,144 +15,170 @@
 	return 0; \
 }
 
-#define CHECK_CNTXT(cntxt_type, cntxt, cntxt_pos, pos) (par->token_idx == pos \
-		&& par->statement[cntxt_pos].type == cntxt_type \
-		&& strcmp(par->statement[cntxt_pos].text, cntxt) == 0)
-
 #define INVALID_USE(name, type) \
 		fprintf(stderr, LERRL("Invalid use of "name" `%s`.\n"), \
 				yylineno, token); \
 		lasm_ret = 0x10 + type; \
 		return 0
 
+#define TOKEN_START() if (0) {
+#define TOKEN(ttext, ttype) } else if (strcmp(token, ttext) == 0) { type = ttype
+#define TOKEN_DEFAULT() } else {
+#define TOKEN_END() }
+
+static int _try_add_token(struct parser *par, enum token_type type, char *text)
+{
+	int success = par_add_token(par, type, text);
+	if (!success) {
+		fprintf(stderr, LERRL("Couldn't add token `%s`. This statement "
+					"may be too long.\n"),
+				yylineno, text);
+		lasm_ret = 0x30 + type;
+		return 0;
+	}
+	return 1;
+}
+
+static int _try_add_symbol(struct parser *par, char *name, int value)
+{
+	int success = par_add_symbol(par, name, value);
+	if (!success) {
+		fprintf(stderr, LERRL("Couldn't add symbol `%s`. This symbol "
+					"may already be defined.\n"),
+				yylineno, name);
+		lasm_ret = 0x2F;
+		return 0;
+	}
+	return 1;
+}
+
+static int _try_add_ref(struct parser *par, char *name, int size)
+{
+	int success = par_add_ref(par, name, size);
+	if (!success) {
+		fprintf(stderr, LERRL("Couldn't add reference `%s`.\n"),
+				yylineno, name);
+		lasm_ret = 0x2E;
+		return 0;
+	}
+	return 1;
+}
+
 int handle_instr(char *token, struct parser *par)
 {
-	if (strcmp(token, "mod") == 0) {
+	enum token_type type;
+
+	TOKEN_START();
+	TOKEN("load", LOAD);
+	TOKEN("store", STORE);
+	TOKEN("mod", MOD);
 		llex_set_state(MODSC);
-	}
-	CHECK_START("Instruction", INSTR);
-	return par_add_token(par, INSTR, token);
+	TOKEN("cond", COND);
+	TOKEN("sig", SIG);
+	TOKEN("nop", NOP);
+	TOKEN_DEFAULT();
+		fprintf(stderr, LERRL("Unexpected instruction: `%s`\n"),
+				yylineno, token);
+		return 0;
+	TOKEN_END();
+
+	return _try_add_token(par, type, token);
 }
 
 int handle_macro(char *token, struct parser *par)
 {
-	if (strcmp(token, "RAW") == 0) {
+	enum token_type type;
+
+	TOKEN_START();
+	TOKEN("RET", NON);
+	TOKEN("PSH", UN_REG);
+	TOKEN("POP", UN_REG);
+	TOKEN("INC", UN_REG);
+	TOKEN("DEC", UN_REG);
+	TOKEN("GOTO", UN_IMM);
+	TOKEN("INT", UN_IMM);
+	TOKEN("CALL", UN_IMM);
+	TOKEN("CHA", UN_CHA);
+	TOKEN("STR", UN_STR);
+	TOKEN("RAW", UN_RAW);
 		llex_set_state(RAWSC);
-	}
-	CHECK_START("Macro", MACRO);
-	return par_add_token(par, MACRO, token);
+	TOKEN("TRA", BIN_REG_REG);
+	TOKEN_DEFAULT();
+		fprintf(stderr, LERRL("Unexpected macro: %s\n"),
+				yylineno, token);
+		return 0;
+	TOKEN_END();
+
+	return _try_add_token(par, type, token);
 }
 
 int handle_comment(char *token, struct parser *par)
 {
-	return par_add_token(par, LABEL, token);
+	return 1;
 }
 
 int handle_label(char *token, struct parser *par)
 {
-	if (par->token_idx == 0)
-		return par_add_symbol(par, token, par->out_buf->n_elems);
+	int success = 0;
+	if (par->token_idx == 0) {
+		return _try_add_symbol(par, token, par->out_buf->n_elems);
+	}
 
-	return par_add_token(par, LABEL, token);
+	if (!_try_add_ref(par, token, 2))
+		return 0;
+	return _try_add_token(par, IMM, "0");
 }
 
 int handle_raw(char *token, struct parser *par)
 {
-	if (!CHECK_CNTXT(MACRO, "RAW", 0, 2)) {
-		INVALID_USE("raw", RAW);
-	}
-	return par_add_token(par, RAW, token);
+	return 1;
 }
 
 int handle_number(char *token, struct parser *par)
 {
-	return par_add_token(par, NUMBER, token);
+	return 1;
 }
 
 int handle_string(char *token, struct parser *par)
 {
-	if (!CHECK_CNTXT(MACRO, "STR", 0, 2)) {
-		INVALID_USE("string", STRING);
-	}
-	return par_add_token(par, STRING, token);
+	return 1;
 }
 
 int handle_char(char *token, struct parser *par)
 {
-	if (!CHECK_CNTXT(MACRO, "CHA", 0, 2)) {
-		INVALID_USE("character", CHAR);
-	}
-	return par_add_token(par, CHAR, token);
+	return 1;
 }
 
 int handle_register(char *token, struct parser *par)
 {
-	CHECK_SPACE();
-	if (
-			   !CHECK_CNTXT(INSTR, "load", 0, 4)
-			&& !CHECK_CNTXT(INSTR, "store", 0, 4)
-			&& !CHECK_CNTXT(INSTR, "mod", 0, 2)
-			&& !(CHECK_CNTXT(INSTR, "mod", 0, 6)
-			/* This context shall not be used with the following
-			 * mod operations. */
-				&& !(
-					   CHECK_CNTXT(OPERATION, "++", 4, 6)
-					|| CHECK_CNTXT(OPERATION, "--", 4, 6)
-					|| CHECK_CNTXT(OPERATION, "~", 4, 6)
-				))
-			&& !CHECK_CNTXT(MACRO, "PSH", 0, 2)
-			&& !CHECK_CNTXT(MACRO, "POP", 0, 2)
-			&& !CHECK_CNTXT(MACRO, "INC", 0, 2)
-			&& !CHECK_CNTXT(MACRO, "DEC", 0, 2)
-			&& !CHECK_CNTXT(MACRO, "TRA", 0, 2)
-			&& !CHECK_CNTXT(MACRO, "TRA", 0, 4)) {
-		INVALID_USE("register", REGISTER);
-	}
-	return par_add_token(par, REGISTER, token);
+	return 1;
 }
 
 int handle_signal(char *token, struct parser *par)
 {
-	CHECK_SPACE();
-	if (!CHECK_CNTXT(INSTR, "sig", 0, 2)) {
-		INVALID_USE("signal", SIGNAL);
-	}
-	return par_add_token(par, SIGNAL, token);
+	return 1;
 }
 
 int handle_implied(char *token, struct parser *par)
 {
-	CHECK_SPACE();
-	return par_add_token(par, IMPLIED, token);
+	return 1;
 }
 
 int handle_operation(char *token, struct parser *par)
 {
-	CHECK_SPACE();
-	if (!CHECK_CNTXT(INSTR, "mod", 0, 4)) {
-		INVALID_USE("operation", OPERATION);
-	}
-	return par_add_token(par, OPERATION, token);
+	return 1;
 }
 
 int handle_condition(char *token, struct parser *par)
 {
-	CHECK_SPACE();
-	if (!CHECK_CNTXT(INSTR, "cond", 0, 2)) {
-		INVALID_USE("condition", CONDITION);
-	}
-	return par_add_token(par, CONDITION, token);
+	return 1;
 }
 
 int handle_addrmode(char *token, struct parser *par)
 {
-	CHECK_SPACE();
-	if (!CHECK_CNTXT(INSTR, "load", 0, 2)
-			&& !CHECK_CNTXT(INSTR, "store", 0, 2)) {
-		INVALID_USE("addressing mode", ADDRMODE);
-	}
-	return par_add_token(par, ADDRMODE, token);
+	return 1;
 }
+
 
 int handle_space(char *token, struct parser *par)
 {
@@ -166,7 +186,8 @@ int handle_space(char *token, struct parser *par)
 	if (i == 0 || par->statement[i - 1].type == SPACE)
 		return 1;
 
-	return par_add_token(par, SPACE, token);
+	par_add_token(par, SPACE, token);
+	return 1;
 }
 
 int handle_newline(char *token, struct parser *par)
@@ -179,6 +200,6 @@ int handle_newline(char *token, struct parser *par)
 int handle_unknown(char *token, struct parser *par)
 {
 	fprintf(stderr, LERRL("Invalid token.\n"), yylineno);
-	lasm_ret = 0x10 + UNKNOWN;
+	lasm_ret = 0x10 + NONE;
 	return 0;
 }
