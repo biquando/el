@@ -68,32 +68,25 @@ int par_add_symbol(struct parser *par, char *name, int value)
 	if (!name_cpy)
 		return 0;
 	strcpy(name_cpy, name);
+
 	sym.name = name_cpy;
 	sym.value = value;
-
 	return vec_push_back(par->symbol_table, &sym);
 }
 
 /* Returns 1 if success, 0 otherwise */
-int par_add_ref(struct parser *par, char *name, int size)
+int par_add_ref(struct parser *par, char *name, int size, int lineno)
 {
 	struct ref_entry ref;
-	ref.sym_idx = -1;
-
-	/* Look for symbol of the same name */
-	for (int i = 0; i < par->symbol_table->n_elems; i++) {
-		struct symbol_entry *s = vec_get(par->symbol_table, i);
-		if (strcmp(s->name, name) == 0) {
-			ref.sym_idx = i;
-			break;
-		}
-	}
-	if (ref.sym_idx == -1)
+	char *name_cpy = malloc(strlen(name) + 1);
+	if (!name_cpy)
 		return 0;
+	strcpy(name_cpy, name);
 
-	ref.location = (int) par->out_buf->n_elems;
+	ref.location = par->out_buf->n_elems;
+	ref.name = name_cpy;
 	ref.size = size;
-
+	ref.lineno = lineno;
 	return vec_push_back(par->ref_table, &ref);
 }
 
@@ -103,26 +96,53 @@ int par_write_byte(struct parser *par, unsigned char b)
 	return vec_push_back(par->out_buf, &b);
 }
 
-void par_resolve_refs(struct parser *par)
+/* Returns 1 if success, 0 otherwise */
+#include <stdio.h>
+int par_resolve_refs(struct parser *par, struct ref_entry *err_ref)
 {
 	for (int i = 0; i < par->ref_table->n_elems; i++) {
 		struct ref_entry *r = vec_get(par->ref_table, i);
-		struct symbol_entry *s = vec_get(par->symbol_table, r->sym_idx);
+
+		struct symbol_entry *sym = NULL;
+		/* Find symbol with matching name */
+		for (int s = 0; s < par->symbol_table->n_elems; s++) {
+			if (strncmp(
+					((struct symbol_entry *)
+					vec_get(par->symbol_table, s))->name,
+					r->name,
+					strlen(r->name)
+					) == 0) {
+				sym = vec_get(par->symbol_table, s);
+				break;
+			}
+		}
+		if (!sym) {
+			*err_ref = *r;
+			return 0;
+		}
 
 		for (int b = 0; b < r->size; b++) {
 			unsigned char *p = vec_get(par->out_buf,
 					r->location + b);
-			*p = (unsigned char) (s->value >> (8 * b));
+			*p = (unsigned char) (sym->value >> (8 * b));
 		}
 	}
+
+	return 1;
 }
 
 void par_free(struct parser *par)
 {
 	par_end_statement(par);
+	/* Free symbol strings */
 	for (int i = 0; i < par->symbol_table->n_elems; i++) {
 		struct symbol_entry *sym = vec_get(par->symbol_table, i);
 		free(sym->name);
+	}
+	/* Free refs strings */
+	for (int i = 0; i < par->ref_table->n_elems; i++) {
+		struct ref_entry *ref = vec_get(par->ref_table, i);
+		free(ref->name);
 	}
 	vec_free(par->symbol_table);
 	vec_free(par->ref_table);

@@ -48,6 +48,6 @@ cleanup:
 	fclose(yyin);
 	argp_free(argp);
 	free(argvals);
-	llex_cleanup();
+	llex_end();
 	return lasm_ret;
 }

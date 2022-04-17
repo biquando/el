@@ -52,13 +52,25 @@ static int _try_add_symbol(struct parser *par, char *name, int value)
 	return 1;
 }
 
-static int _try_add_ref(struct parser *par, char *name, int size)
+static int _try_add_ref(struct parser *par, char *name, int size, int lineno)
 {
-	int success = par_add_ref(par, name, size);
+	int success = par_add_ref(par, name, size, lineno);
 	if (!success) {
 		fprintf(stderr, LERRL("Couldn't add reference `%s`.\n"),
 				yylineno, name);
 		lasm_ret = 0x2E;
+		return 0;
+	}
+	return 1;
+}
+
+static int _try_write_byte(struct parser *par, unsigned char b)
+{
+	int success = par_write_byte(par, b);
+	if (!success) {
+		fprintf(stderr, LERRL("Couldn't add byte %u\n"),
+				yylineno, b);
+		lasm_ret = 0x40;
 		return 0;
 	}
 	return 1;
@@ -124,9 +136,12 @@ int handle_label(char *token, struct parser *par)
 		return _try_add_symbol(par, token, par->out_buf->n_elems);
 	}
 
-	if (!_try_add_ref(par, token, 2))
+	/* For now, references will fill in these two bytes.
+	 * TODO: Change this to an immediate and make sure the immediate's
+	 * location is used correctly. This may require changing par_add_ref. */
+	if (!_try_write_byte(par, 0) || !_try_write_byte(par, 0))
 		return 0;
-	return _try_add_token(par, IMM, "0");
+	return _try_add_ref(par, token, 2, yylineno);
 }
 
 int handle_raw(char *token, struct parser *par)

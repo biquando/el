@@ -5,6 +5,6 @@ extern int lasm_ret;
 
 int llex_init();
 void llex_set_state(int sc);
-void llex_cleanup();
+void llex_end();
 
 #endif

@@ -29,8 +29,9 @@ struct symbol_entry {
 
 struct ref_entry {
 	int location;
-	int sym_idx;
+	char *name;
 	int size;
+	int lineno;
 };
 
 struct parser {
@@ -45,9 +46,9 @@ struct parser *par_init();
 int par_add_token(struct parser *par, enum token_type type, char *text);
 void par_end_statement(struct parser *par);
 int par_add_symbol(struct parser *par, char *name, int value);
-int par_add_ref(struct parser *par, char *name, int size);
+int par_add_ref(struct parser *par, char *name, int size, int lineno);
 int par_write_byte(struct parser *par, unsigned char b);
-void par_resolve_refs(struct parser *par);
+int par_resolve_refs(struct parser *par, struct ref_entry *err_ref);
 void par_free(struct parser *par);
 
 #endif

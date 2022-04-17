@@ -1,8 +1,9 @@
 %{
 #include <stdio.h>
-#include "lasm.h"
 #include "handlers.h"
+#include "lasm.h"
 #include "parser.h"
+#include "style.h"
 
 static struct parser *par;
 %}
@@ -63,7 +64,13 @@ void llex_set_state(int sc)
 	BEGIN sc;
 }
 
-void llex_cleanup()
+void llex_end()
 {
+	struct ref_entry err_ref;
+	if (!par_resolve_refs(par, &err_ref)) {
+		fprintf(stderr, LERRL("Undefined symbol `%s`.\n"),
+				err_ref.lineno, err_ref.name);
+		lasm_ret = 0x2D;
+	}
 	par_free(par);
 }
