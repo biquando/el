@@ -67,7 +67,7 @@ void llex_set_state(int sc)
 void llex_end()
 {
 	struct ref_entry err_ref;
-	if (!par_resolve_refs(par, &err_ref)) {
+	if (!lasm_ret && !par_resolve_refs(par, &err_ref)) {
 		fprintf(stderr, LERRL("Undefined symbol `%s`.\n"),
 				err_ref.lineno, err_ref.name);
 		lasm_ret = 0x2D;

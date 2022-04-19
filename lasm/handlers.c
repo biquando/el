@@ -68,7 +68,7 @@ static int _try_write_byte(struct parser *par, unsigned char b)
 {
 	int success = par_write_byte(par, b);
 	if (!success) {
-		fprintf(stderr, LERRL("Couldn't add byte %u\n"),
+		fprintf(stderr, LERRL("Couldn't add byte %x\n"),
 				yylineno, b);
 		lasm_ret = 0x40;
 		return 0;
@@ -89,8 +89,9 @@ int handle_instr(char *token, struct parser *par)
 	TOKEN("sig", SIG);
 	TOKEN("nop", NOP);
 	TOKEN_DEFAULT();
-		fprintf(stderr, LERRL("Unexpected instruction: `%s`\n"),
+		fprintf(stderr, LERRL("Unexpected instruction: %s\n"),
 				yylineno, token);
+		lasm_ret = 0x60;
 		return 0;
 	TOKEN_END();
 
@@ -101,6 +102,7 @@ int handle_macro(char *token, struct parser *par)
 {
 	enum token_type type;
 
+	/* TODO: implement GLOBAL macro */
 	TOKEN_START();
 	TOKEN("RET", NON);
 	TOKEN("PSH", UN_REG);
@@ -118,6 +120,7 @@ int handle_macro(char *token, struct parser *par)
 	TOKEN_DEFAULT();
 		fprintf(stderr, LERRL("Unexpected macro: %s\n"),
 				yylineno, token);
+		lasm_ret = 0x61;
 		return 0;
 	TOKEN_END();
 
@@ -131,67 +134,120 @@ int handle_comment(char *token, struct parser *par)
 
 int handle_label(char *token, struct parser *par)
 {
-	int success = 0;
+	int failed = 0;
 	if (par->token_idx == 0) {
 		return _try_add_symbol(par, token, par->out_buf->n_elems);
 	}
 
 	/* For now, references will fill in these two bytes.
-	 * TODO: Change this to an immediate and make sure the immediate's
+	 * TODO: Change this to an immediate token and make sure the immediate's
 	 * location is used correctly. This may require changing par_add_ref. */
-	if (!_try_write_byte(par, 0) || !_try_write_byte(par, 0))
-		return 0;
-	return _try_add_ref(par, token, 2, yylineno);
+	failed |= !_try_add_ref(par, token, 2, yylineno);
+	failed |= !_try_write_byte(par, 0x00);
+	failed |= !_try_write_byte(par, 0x00);
+	return !failed;
 }
 
 int handle_raw(char *token, struct parser *par)
 {
-	return 1;
+	return _try_add_token(par, RAW, token);
 }
 
 int handle_number(char *token, struct parser *par)
 {
-	return 1;
+	return _try_add_token(par, IMM, token);
 }
 
 int handle_string(char *token, struct parser *par)
 {
-	return 1;
+	return _try_add_token(par, STR, token);
 }
 
 int handle_char(char *token, struct parser *par)
 {
-	return 1;
+	return _try_add_token(par, CHA, token);
 }
 
 int handle_register(char *token, struct parser *par)
 {
-	return 1;
+	return _try_add_token(par, REG, token);
 }
 
 int handle_signal(char *token, struct parser *par)
 {
-	return 1;
+	enum token_type type;
+
+	TOKEN_START();
+	TOKEN("abort", UNVAL_SIG);
+	TOKEN("out", VAL_SIG);
+	TOKEN_DEFAULT();
+		fprintf(stderr, LERRL("Unexpected signal: %s\n"),
+				yylineno, token);
+		lasm_ret = 0x62;
+		return 0;
+	TOKEN_END();
+
+	return _try_add_token(par, type, token);
 }
 
 int handle_implied(char *token, struct parser *par)
 {
-	return 1;
+	int failed = 0;
+	failed |= !_try_write_byte(par, 0x15); /* Opcode for `load # rar` */
+	failed |= !_try_add_ref(par, token + 1, 2, yylineno);
+	failed |= !_try_write_byte(par, 0x00);
+	failed |= !_try_write_byte(par, 0x00);
+	return !failed;
 }
 
 int handle_operation(char *token, struct parser *par)
 {
-	return 1;
+	enum token_type type;
+
+	TOKEN_START();
+	TOKEN("+", BIN_OP);
+	TOKEN("-", BIN_OP);
+	TOKEN("++", UN_OP);
+	TOKEN("--", UN_OP);
+	TOKEN("&", BIN_OP);
+	TOKEN("|", BIN_OP);
+	TOKEN("^", BIN_OP);
+	TOKEN("~", UN_OP);
+	TOKEN(">>", BIN_OP);
+	TOKEN("<<", BIN_OP);
+	TOKEN("/>", BIN_OP);
+	TOKEN("?", BIN_OP);
+	TOKEN_DEFAULT();
+		fprintf(stderr, LERRL("Unexpected operation: %s\n"),
+				yylineno, token);
+		lasm_ret = 0x63;
+		return 0;
+	TOKEN_END();
+
+	return _try_add_token(par, type, token);
 }
 
 int handle_condition(char *token, struct parser *par)
 {
-	return 1;
+	return _try_add_token(par, CONDITION, token);
 }
 
 int handle_addrmode(char *token, struct parser *par)
 {
-	return 1;
+	enum token_type type;
+
+	TOKEN_START();
+	TOKEN("#", IMM_ADDR);
+	TOKEN("*", ABS_ADDR);
+	TOKEN("+", ABS_ADDR);
+	TOKEN_DEFAULT();
+		fprintf(stderr, LERRL("Unexpected addressing mode: %s\n"),
+				yylineno, token);
+		lasm_ret = 0x64;
+		return 0;
+	TOKEN_END();
+
+	return _try_add_token(par, type, token);
 }
 
 
@@ -201,8 +257,7 @@ int handle_space(char *token, struct parser *par)
 	if (i == 0 || par->statement[i - 1].type == SPACE)
 		return 1;
 
-	par_add_token(par, SPACE, token);
-	return 1;
+	return _try_add_token(par, SPACE, token);
 }
 
 int handle_newline(char *token, struct parser *par)
