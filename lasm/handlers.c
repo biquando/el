@@ -134,18 +134,10 @@ int handle_comment(char *token, struct parser *par)
 
 int handle_label(char *token, struct parser *par)
 {
-	int failed = 0;
-	if (par->token_idx == 0) {
+	if (par->token_idx == 0)
 		return _try_add_symbol(par, token, par->out_buf->n_elems);
-	}
 
-	/* For now, references will fill in these two bytes.
-	 * TODO: Change this to an immediate token and make sure the immediate's
-	 * location is used correctly. This may require changing par_add_ref. */
-	failed |= !_try_add_ref(par, token, 2, yylineno);
-	failed |= !_try_write_byte(par, 0x00);
-	failed |= !_try_write_byte(par, 0x00);
-	return !failed;
+	return _try_add_token(par, IMM, token);
 }
 
 int handle_raw(char *token, struct parser *par)
