@@ -170,7 +170,7 @@ int handle_signal(char *token, struct parser *par)
 	enum token_type type;
 
 	TOKEN_START();
-	TOKEN("abort", UNVAL_SIG);
+	TOKEN("abort", VAL_SIG);
 	TOKEN("out", VAL_SIG);
 	TOKEN_DEFAULT();
 		fprintf(stderr, LERRL("Unexpected signal: %s\n"),

@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 	/* Read ofile argument */
 	nargs = argp_get_opt(argp, "--output", argvals);
 	if (nargs == 1) {
-		ofile = fopen(argvals[0], "w");
+		ofile = fopen(argvals[0], "wb");
 		if (!ofile) {
 			fprintf(stderr, LERR("Couldn't open output file: "
 					FITALIC"%s"FRESET"\n"), argvals[0]);
