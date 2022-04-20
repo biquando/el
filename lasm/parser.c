@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vector/vector.h>
+#include "constructors.h"
 #include "parser.h"
 
 struct parser *par_init()
@@ -43,12 +44,63 @@ int par_add_token(struct parser *par, enum token_type type, char *text)
 	return 1;
 }
 
-void par_end_statement(struct parser *par)
+/* Returns 1 if success, 0 otherwise */
+int par_end_statement(struct parser *par, int lineno)
 {
+	int success;
+	if (par->token_idx == 0)
+		return 1;
+
+	switch (par->statement[0].type) {
+	case LOAD:
+		success = construct_load(par, lineno);
+		break;
+	case STORE:
+		success = construct_store(par, lineno);
+		break;
+	case MOD:
+		success = construct_mod(par, lineno);
+		break;
+	case COND:
+		success = construct_cond(par, lineno);
+		break;
+	case SIG:
+		success = construct_sig(par, lineno);
+		break;
+	case NOP:
+		success = construct_nop(par, lineno);
+		break;
+	case NON:
+		success = construct_non(par, lineno);
+		break;
+	case UN_REG:
+		success = construct_un_reg(par, lineno);
+		break;
+	case UN_IMM:
+		success = construct_un_imm(par, lineno);
+		break;
+	case UN_CHA:
+		success = construct_un_cha(par, lineno);
+		break;
+	case UN_STR:
+		success = construct_un_str(par, lineno);
+		break;
+	case UN_RAW:
+		success = construct_un_raw(par, lineno);
+		break;
+	case BIN_REG_REG:
+		success = construct_bin_reg_reg(par, lineno);
+		break;
+	default:
+		success = 0;
+		break;
+	}
+
 	for (int i = 0; i < par->token_idx; i++) {
 		free(par->statement[i].text);
 	}
 	par->token_idx = 0;
+	return success;
 }
 
 /* Returns 1 if success, 0 otherwise */
@@ -133,7 +185,7 @@ int par_resolve_refs(struct parser *par, struct ref_entry *err_ref)
 
 void par_free(struct parser *par)
 {
-	par_end_statement(par);
+	par_end_statement(par, 0);
 	/* Free symbol strings */
 	for (int i = 0; i < par->symbol_table->n_elems; i++) {
 		struct symbol_entry *sym = vec_get(par->symbol_table, i);
