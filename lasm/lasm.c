@@ -13,14 +13,33 @@ int main(int argc, char *argv[])
 	struct argparse *argp = argp_init();
 	char **argvals = malloc(argc * sizeof *argvals);
 	int nargs;
+	FILE *ofile = stdout;
+
+	argp_opt(argp, "--output", 1);
+	argp_alias(argp, "-o", "--output");
+
 	if (!argp_parse(argp, argc, argv)) {
 		fprintf(stderr, LERR("There was an error with parsing arguments"
 					".\n"));
 		lasm_ret = 1;
 		goto cleanup;
 	}
-	nargs = argp_get_args(argp, argvals);
 
+	/* Read ofile argument */
+	nargs = argp_get_opt(argp, "--output", argvals);
+	if (nargs == 1) {
+		ofile = fopen(argvals[0], "w");
+		if (!ofile) {
+			fprintf(stderr, LERR("Couldn't open output file: "
+					FITALIC"%s"FRESET"\n"), argvals[0]);
+			lasm_ret = 1;
+			goto cleanup;
+		}
+	}
+	llex_set_ofile(ofile);
+
+	/* Read non-option arguments */
+	nargs = argp_get_args(argp, argvals);
 	if (nargs > 0) {
 		yyin = fopen(argvals[0], "r");
 		if (!yyin) {
@@ -30,12 +49,12 @@ int main(int argc, char *argv[])
 			goto cleanup;
 		}
 	}
-
 	if (nargs > 1) {
 		fprintf(stderr, LWARN("Only one FILE argument allowed. Using "
 				FITALIC"%s"FRESET"\n"), argvals[0]);
 	}
 
+	/* Initialize lexer */
 	if (!llex_init()) {
 		fprintf(stderr, LERR("There was a problem with initializing. "
 					"Try again.\n"));
@@ -49,5 +68,6 @@ cleanup:
 	argp_free(argp);
 	free(argvals);
 	llex_end();
+	fclose(ofile);
 	return lasm_ret;
 }

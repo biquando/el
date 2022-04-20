@@ -6,6 +6,7 @@
 #include "style.h"
 
 static struct parser *par;
+static FILE *ofile;
 %}
 
 instr load|store|mod|cond|sig|nop
@@ -64,6 +65,11 @@ void llex_set_state(int sc)
 	BEGIN sc;
 }
 
+void llex_set_ofile(FILE *fd)
+{
+	ofile = fd;
+}
+
 void llex_end()
 {
 	struct ref_entry err_ref;
@@ -72,5 +78,10 @@ void llex_end()
 				err_ref.lineno, err_ref.name);
 		lasm_ret = 0x2D;
 	}
+
+	if (!lasm_ret) {
+		fwrite(par->out_buf->base, 1, par->out_buf->n_elems, ofile);
+	}
+
 	par_free(par);
 }
