@@ -50,6 +50,8 @@ int par_end_statement(struct parser *par, int lineno)
 	int success;
 	if (par->token_idx == 0)
 		return 1;
+	if (par->statement[par->token_idx - 1].type == SPACE)
+		par->token_idx--;
 
 	switch (par->statement[0].type) {
 	case LOAD:
