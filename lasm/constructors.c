@@ -72,7 +72,7 @@ static int _decode_imm(struct parser *par, char *token, int lineno)
 
 	return strtol(token, NULL, 0);
 }
-#include <stdio.h>
+
 int construct_load(struct parser *par, int lineno)
 {
 	enum token_type t1[] = {LOAD, SPACE, IMM_ADDR, SPACE, REG, SPACE, IMM};
@@ -98,7 +98,7 @@ int construct_load(struct parser *par, int lineno)
 		failed |= !par_write_byte(par, 0);
 		failed |= !par_write_byte(par, 0);
 	} else {
-		return 0;
+		failed = 1;
 	}
 
 	return !failed;
@@ -106,7 +106,22 @@ int construct_load(struct parser *par, int lineno)
 
 int construct_store(struct parser *par, int lineno)
 {
-	return 1;
+	enum token_type t[] = {STORE, SPACE, ABS_ADDR, SPACE, REG};
+	int tmp;
+	int failed = 0;
+	if (!_match_structure(par, t, 5)) {
+		return 0;
+	}
+
+	/* opcode */
+	tmp = _decode_reg(par->statement[4].text);
+	tmp |= 0x60 | (0x10 * (par->statement[2].text[0] == '+'));
+	failed |= !par_write_byte(par, tmp);
+
+	/* operand */
+	failed |= !par_write_byte(par, 0);
+	failed |= !par_write_byte(par, 0);
+	return !failed;
 }
 
 int construct_mod(struct parser *par, int lineno)

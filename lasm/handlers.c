@@ -255,9 +255,9 @@ int handle_space(char *token, struct parser *par)
 int handle_newline(char *token, struct parser *par)
 {
 	llex_set_state(0);
-	if (!par_end_statement(par, yylineno)) {
-		fprintf(stderr, LERRL("Invalid statment\n"),
-				yylineno);
+	if (!par_end_statement(par, yylineno - 1)) {
+		fprintf(stderr, LERRL("Invalid statement.\n"),
+				yylineno - 1);
 		lasm_ret = 0x7f;
 		return 0;
 	}
