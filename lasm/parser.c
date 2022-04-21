@@ -151,7 +151,7 @@ int par_write_byte(struct parser *par, unsigned char b)
 }
 
 /* Returns 1 if success, 0 otherwise */
-#include <stdio.h>
+/* TODO: offset reference by placeholder value */
 int par_resolve_refs(struct parser *par, struct ref_entry *err_ref)
 {
 	for (int i = 0; i < par->ref_table->n_elems; i++) {

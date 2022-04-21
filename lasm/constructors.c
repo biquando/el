@@ -135,6 +135,15 @@ static int _decode_signal(char *token)
 	return -1;
 }
 
+/* bytes should be big-endian (e.g. 0x123456 -> 0x12, 0x34, 0x56) */
+static int _write_triplet(struct parser *par, int bytes) {
+	int failed = 0;
+	failed |= !par_write_byte(par, bytes >> 16);
+	failed |= !par_write_byte(par, bytes >> 8);
+	failed |= !par_write_byte(par, bytes);
+	return !failed;
+}
+
 int construct_load(struct parser *par, int lineno)
 {
 	enum token_type t1[] = {LOAD, SPACE, IMM_ADDR, SPACE, REG, SPACE, IMM};
@@ -221,9 +230,8 @@ int construct_cond(struct parser *par, int lineno)
 	enum token_type t[] = {COND, SPACE, CONDITION};
 	int tmp;
 	int failed = 0;
-	if (!_match_structure(par, t, 3)) {
+	if (!_match_structure(par, t, 3))
 		return 0;
-	}
 
 	failed |= !par_write_byte(par, 0xc0);
 	tmp = _decode_condition(par->statement[2].text);
@@ -266,9 +274,7 @@ int construct_nop(struct parser *par, int lineno)
 	int tmp;
 	int failed = 0;
 	if (_match_structure(par, t1, 1)) {
-		failed |= !par_write_byte(par, 0xff);
-		failed |= !par_write_byte(par, 0);
-		failed |= !par_write_byte(par, 0);
+		failed |= !_write_triplet(par, 0xff0000);
 
 	} else if (_match_structure(par, t2, 3)) {
 		failed |= !par_write_byte(par, 0xff);
@@ -285,7 +291,22 @@ int construct_nop(struct parser *par, int lineno)
 
 int construct_non(struct parser *par, int lineno)
 {
-	return 1;
+	enum token_type t[] = {NON};
+	int failed = 0;
+	if (!_match_structure(par, t, 1))
+		return 0;
+
+	if (strcmp(par->statement[0].text, "RET") == 0) {
+		failed |= !_write_triplet(par, 0x150000);  /* load # rar 0  */
+		failed |= !_write_triplet(par, 0x850506);  /* mod rar | rsp */
+		failed |= !_write_triplet(par, 0x860200);  /* mod rsp ++    */
+		failed |= !_write_triplet(par, 0x860200);  /* mod rsp ++    */
+		failed |= !_write_triplet(par, 0x270000);  /* load * rip    */
+	} else {
+		failed = 1;
+	}
+
+	return !failed;
 }
 
 int construct_un_reg(struct parser *par, int lineno)
