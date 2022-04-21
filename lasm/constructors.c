@@ -311,7 +311,48 @@ int construct_non(struct parser *par, int lineno)
 
 int construct_un_reg(struct parser *par, int lineno)
 {
-	return 1;
+	enum token_type t[] = {UN_REG, SPACE, REG};
+	int tmp;
+	int failed = 0;
+	const char *macro;
+	if (!_match_structure(par, t, 3))
+		return 0;
+
+	macro = par->statement[0].text;
+	tmp = _decode_reg(par->statement[2].text);
+	if (strcmp(macro, "PSH") == 0) {
+		failed |= !_write_triplet(par, 0x860300);  /* mod rsp --    */
+		if (!(tmp & 0x8))
+			failed |= !_write_triplet(par, 0x860300);
+		failed |= !_write_triplet(par, 0x150000);  /* load # rar 0  */
+		failed |= !_write_triplet(par, 0x850506);  /* mod rar | rsp */
+
+		failed |= !par_write_byte(par, 0x60 | tmp);/* store * REG   */
+		failed |= !par_write_byte(par, 0);
+		failed |= !par_write_byte(par, 0);
+	} else if (strcmp(macro, "POP") == 0) {
+		failed |= !_write_triplet(par, 0x150000);  /* load # rar 0  */
+		failed |= !_write_triplet(par, 0x850506);  /* mod rar | rsp */
+		failed |= !_write_triplet(par, 0x860200);  /* mod rsp ++    */
+		if (!(tmp & 0x8))
+			failed |= !_write_triplet(par, 0x860200);
+
+		failed |= !par_write_byte(par, 0x20 | tmp);/* load * REG    */
+		failed |= !par_write_byte(par, 0);
+		failed |= !par_write_byte(par, 0);
+	} else if (strcmp(macro, "INC") == 0) {
+		tmp = (0x80 | tmp) << 16;  /* mod REG */
+		failed |= !_write_triplet(par, tmp | 0x0200);  /* ++ */
+		failed |= !_write_triplet(par, tmp | 0x0200);  /* ++ */
+	} else if (strcmp(macro, "DEC") == 0) {
+		tmp = (0x80 | tmp) << 16;  /* mod REG */
+		failed |= !_write_triplet(par, tmp | 0x0300);  /* -- */
+		failed |= !_write_triplet(par, tmp | 0x0300);  /* -- */
+	} else {
+		failed = 1;
+	}
+
+	return !failed;
 }
 
 int construct_un_imm(struct parser *par, int lineno)
