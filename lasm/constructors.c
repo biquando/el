@@ -64,10 +64,10 @@ static int _decode_reg(char *token)
 }
 
 /* Needs the parser to create label references */
-static int _decode_imm(struct parser *par, char *token, int lineno)
+static int _decode_imm(struct parser *par, char *token, int size, int lineno)
 {
 	if (token[0] == '$') {  /* label ref */
-		par_add_ref(par, token, 2, lineno);
+		par_add_ref(par, token, size, lineno);
 		return 0;
 	}
 
@@ -135,6 +135,41 @@ static int _decode_signal(char *token)
 	return -1;
 }
 
+static int _decode_cha(char *token)
+{
+	if (token[1] != '\\')
+		return token[1];
+
+	switch (token[2]) {
+	case 'a':
+		return '\a';
+	case 'b':
+		return '\b';
+	case 'f':
+		return '\f';
+	case 'n':
+		return '\n';
+	case 'r':
+		return '\r';
+	case 't':
+		return '\t';
+	case 'v':
+		return '\v';
+	case '\\':
+		return '\\';
+	case '\'':
+		return '\'';
+	case '"':
+		return '\"';
+	case '?':
+		return '\?';
+	case '0':
+		return '\0';
+	default:
+		return -1;
+	}
+}
+
 /* bytes should be big-endian (e.g. 0x123456 -> 0x12, 0x34, 0x56) */
 static int _write_triplet(struct parser *par, int bytes) {
 	int failed = 0;
@@ -156,7 +191,7 @@ int construct_load(struct parser *par, int lineno)
 		failed |= !par_write_byte(par, 0x10 | tmp);
 
 		/* operand */
-		tmp = _decode_imm(par, par->statement[6].text, lineno);
+		tmp = _decode_imm(par, par->statement[6].text, 2, lineno);
 		failed |= !par_write_byte(par, tmp);
 		failed |= !par_write_byte(par, tmp >> 8);
 	} else if (_match_structure(par, t2, 5)) {
@@ -256,7 +291,7 @@ int construct_sig(struct parser *par, int lineno)
 		tmp = _decode_signal(par->statement[2].text);
 		failed |= !par_write_byte(par, tmp);
 
-		tmp = _decode_imm(par, par->statement[4].text, lineno);
+		tmp = _decode_imm(par, par->statement[4].text, 2, lineno);
 		failed |= !par_write_byte(par, tmp);
 		failed |= !par_write_byte(par, tmp >> 8);
 
@@ -279,7 +314,7 @@ int construct_nop(struct parser *par, int lineno)
 	} else if (_match_structure(par, t2, 3)) {
 		failed |= !par_write_byte(par, 0xff);
 
-		tmp = _decode_imm(par, par->statement[2].text, lineno);
+		tmp = _decode_imm(par, par->statement[2].text, 2, lineno);
 		failed |= !par_write_byte(par, tmp);
 		failed |= !par_write_byte(par, tmp >> 8);
 	} else {
@@ -357,25 +392,154 @@ int construct_un_reg(struct parser *par, int lineno)
 
 int construct_un_imm(struct parser *par, int lineno)
 {
-	return 1;
+	enum token_type t[] = {UN_IMM, SPACE, IMM};
+	int tmp;
+	int failed = 0;
+	const char *macro;
+
+	if (!_match_structure(par, t, 3))
+		return 0;
+
+	macro = par->statement[0].text;
+	if (strcmp(macro, "GLOBAL") == 0) {
+		/* nop IMM */
+		failed |= !par_write_byte(par, 0xff);
+		tmp = _decode_imm(par, par->statement[2].text, 2, lineno);
+		failed |= !par_write_byte(par, tmp);
+		failed |= !par_write_byte(par, tmp >> 8);
+	} else if (strcmp(macro, "GOTO") == 0) {
+		failed |= !par_write_byte(par, 0x17);
+
+		tmp = _decode_imm(par, par->statement[2].text, 2, lineno) - 3;
+		failed |= !par_write_byte(par, tmp);
+		failed |= !par_write_byte(par, tmp >> 8);
+	} else if (strcmp(macro, "CALL") == 0) {
+		failed |= !_write_triplet(par, 0x141200);  /* load # rx 18  */
+		failed |= !_write_triplet(par, 0x840007);  /* mod rx + rip  */
+
+		/* PSH rx */
+		failed |= !_write_triplet(par, 0x860300);  /* mod rsp --    */
+		failed |= !_write_triplet(par, 0x860300);  /* mod rsp --    */
+		failed |= !_write_triplet(par, 0x150000);  /* load # rar 0  */
+		failed |= !_write_triplet(par, 0x850506);  /* mod rar | rsp */
+		failed |= !_write_triplet(par, 0x640000);  /* store * rx    */
+
+		/* GOTO IMM */
+		failed |= !par_write_byte(par, 0x17);
+		tmp = _decode_imm(par, par->statement[2].text, 2, lineno) - 3;
+		failed |= !par_write_byte(par, tmp);
+		failed |= !par_write_byte(par, tmp >> 8);
+	} else if (strcmp(macro, "INT") == 0) {
+		tmp = _decode_imm(par, par->statement[2].text, 2, lineno);
+		failed |= !par_write_byte(par, tmp);
+		failed |= !par_write_byte(par, tmp >> 8);
+	} else {
+		failed = 1;
+	}
+
+	return !failed;
 }
 
 int construct_un_cha(struct parser *par, int lineno)
 {
-	return 1;
+	enum token_type t1[] = {UN_CHA, SPACE, CHA};
+	enum token_type t2[] = {UN_CHA, SPACE, IMM};
+	int tmp;
+	int failed = 0;
+	const char *chastr;
+
+	if (_match_structure(par, t1, 3)) {
+		tmp = _decode_cha(par->statement[2].text);
+		if (tmp == -1)
+			failed = 1;
+		failed |= !par_write_byte(par, tmp);
+	} else if (_match_structure(par, t2, 3)) {
+		tmp = _decode_imm(par, par->statement[2].text, 1, lineno);
+		failed |= !par_write_byte(par, tmp);
+	}
+
+	return !failed;
 }
 
 int construct_un_str(struct parser *par, int lineno)
 {
-	return 1;
+	enum token_type t[] = {UN_STR, SPACE, STR};
+	int tmp;
+	int failed = 0;
+	char *str;
+	int len;
+
+	if (!_match_structure(par, t, 3))
+		return 0;
+
+	len = strlen(par->statement[2].text);
+	str = malloc(len + 1);
+	strncpy(str, par->statement[2].text, len);
+
+	/* Cut off double quotes */
+	str[len - 1] = '\0';
+	str++;
+
+	while (*str && !failed) {
+		tmp = _decode_cha(str - 1);
+		if (tmp == -1)
+			failed = 1;
+		failed |= !par_write_byte(par, tmp);
+		if (*(str++) == '\\')
+			str++;
+	}
+	failed |= !par_write_byte(par, '\0');
+	return !failed;
 }
 
 int construct_un_raw(struct parser *par, int lineno)
 {
-	return 1;
+	enum token_type t[] = {UN_RAW, SPACE, RAW};
+	int tmp;
+	int failed = 0;
+	const char *rawstr;
+
+	if (!_match_structure(par, t, 3))
+		return 0;
+
+	rawstr = par->statement[2].text;
+	while (!failed) {
+		tmp = strtol(rawstr, (char **) &rawstr, 16);
+		failed |= !par_write_byte(par, tmp);
+		if (!*rawstr)
+			break;
+		rawstr++;
+	}
+
+	return !failed;
 }
 
 int construct_bin_reg_reg(struct parser *par, int lineno)
 {
-	return 1;
+	enum token_type t[] = {BIN_REG_REG, SPACE, REG, SPACE, REG};
+	int tmp;
+	int failed = 0;
+	const char *macro;
+
+	if (!_match_structure(par, t, 5))
+		return 0;
+
+	macro = par->statement[0].text;
+	if (strcmp(macro, "TRA") == 0) {
+		/* load # R1 0 */
+		tmp = _decode_reg(par->statement[2].text);
+		tmp = (0x10 | tmp) << 16;
+		failed |= !_write_triplet(par, tmp | 0x0000);
+
+		/* mod R1 + R2 */
+		tmp = 0x80;
+		tmp |= _decode_reg(par->statement[2].text);
+		tmp = tmp << 16;
+		tmp |= _decode_reg(par->statement[4].text);
+		failed |= !_write_triplet(par, tmp);
+	} else {
+		failed = 1;
+	}
+
+	return !failed;
 }

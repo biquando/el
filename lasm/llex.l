@@ -79,7 +79,7 @@ void llex_end()
 		lasm_ret = 0x2D;
 	}
 
-	if (!lasm_ret) {
+	if (!lasm_ret || lasm_ret == 0x2D) {
 		fwrite(par->out_buf->base, 1, par->out_buf->n_elems, ofile);
 	}
 

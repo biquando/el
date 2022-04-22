@@ -109,6 +109,7 @@ int handle_macro(char *token, struct parser *par)
 	TOKEN("POP", UN_REG);
 	TOKEN("INC", UN_REG);
 	TOKEN("DEC", UN_REG);
+	TOKEN("GLOBAL", UN_IMM);
 	TOKEN("GOTO", UN_IMM);
 	TOKEN("INT", UN_IMM);
 	TOKEN("CALL", UN_IMM);
