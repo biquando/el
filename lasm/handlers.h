@@ -7,6 +7,7 @@ extern int lasm_ret;
 
 int handle_instr(char *token, struct parser *par);
 int handle_macro(char *token, struct parser *par);
+int handle_directive(char *token, struct parser *par);
 int handle_comment(char *token, struct parser *par);
 int handle_label(char *token, struct parser *par);
 int handle_raw(char *token, struct parser *par);

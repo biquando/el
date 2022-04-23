@@ -401,16 +401,7 @@ int construct_un_imm(struct parser *par, int lineno)
 		return 0;
 
 	macro = par->statement[0].text;
-	if (strcmp(macro, "GLOBAL") == 0) {
-		/* nop IMM */
-		failed |= !par_write_byte(par, 0xff);
-		tmp = _decode_imm(par, par->statement[2].text, 2, lineno);
-		failed |= !par_write_byte(par, tmp);
-		failed |= !par_write_byte(par, tmp >> 8);
-
-		/* set par->global */
-		failed |= !par_set_global(par, par->statement[2].text);
-	} else if (strcmp(macro, "GOTO") == 0) {
+	if (strcmp(macro, "GOTO") == 0) {
 		failed |= !par_write_byte(par, 0x17);
 
 		tmp = _decode_imm(par, par->statement[2].text, 2, lineno) - 3;
@@ -540,6 +531,33 @@ int construct_bin_reg_reg(struct parser *par, int lineno)
 		tmp = tmp << 16;
 		tmp |= _decode_reg(par->statement[4].text);
 		failed |= !_write_triplet(par, tmp);
+	} else {
+		failed = 1;
+	}
+
+	return !failed;
+}
+
+int construct_directive(struct parser *par, int lineno)
+{
+	enum token_type t[] = {DIRECTIVE, SPACE, IMM};
+	int tmp;
+	int failed = 0;
+	const char *dir;
+
+	if (!_match_structure(par, t, 3))
+		return 0;
+
+	dir = par->statement[0].text;
+	if (strcmp(dir, ".global") == 0) {
+		/* nop IMM */
+		failed |= !par_write_byte(par, 0xff);
+		tmp = _decode_imm(par, par->statement[2].text, 2, lineno);
+		failed |= !par_write_byte(par, tmp);
+		failed |= !par_write_byte(par, tmp >> 8);
+
+		/* set par->global */
+		failed |= !par_set_global(par, par->statement[2].text);
 	} else {
 		failed = 1;
 	}

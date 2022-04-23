@@ -10,7 +10,8 @@ static FILE *ofile;
 %}
 
 instr load|store|mod|cond|sig|nop
-macro GOTO|RAW|INT|CHA|STR|GLOBAL|PSH|POP|CALL|RET|INC|DEC|TRA
+macro GOTO|RAW|INT|CHA|STR|PSH|POP|CALL|RET|INC|DEC|TRA
+directive .(global)
 comment \/\/.*$
 label \$[a-zA-Z0-9_]+
 number ([0-9]+)|(0x[0-9a-fA-F]+)
@@ -32,6 +33,7 @@ space [ \t]+
 
 {instr} {if (!handle_instr(yytext, par)) yyterminate();}
 {macro} {if (!handle_macro(yytext, par)) yyterminate();}
+{directive} {if (!handle_directive(yytext, par)) yyterminate();}
 {comment} {if (!handle_comment(yytext, par)) yyterminate();}
 {label} {if (!handle_label(yytext, par)) yyterminate();}
 <RAWSC>{raw} {if (!handle_raw(yytext, par)) yyterminate();}

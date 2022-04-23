@@ -14,7 +14,8 @@ enum token_type {
 	REG, IMM, CHA, STR, RAW,
 	UN_OP, BIN_OP,
 	CONDITION,
-	UNVAL_SIG, VAL_SIG
+	UNVAL_SIG, VAL_SIG,
+	DIRECTIVE
 };
 
 struct token {

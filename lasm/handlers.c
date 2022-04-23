@@ -108,7 +108,6 @@ int handle_macro(char *token, struct parser *par)
 	TOKEN("POP", UN_REG);
 	TOKEN("INC", UN_REG);
 	TOKEN("DEC", UN_REG);
-	TOKEN("GLOBAL", UN_IMM);
 	TOKEN("GOTO", UN_IMM);
 	TOKEN("INT", UN_IMM);
 	TOKEN("CALL", UN_IMM);
@@ -121,6 +120,22 @@ int handle_macro(char *token, struct parser *par)
 		fprintf(stderr, LERRL("Unexpected macro: %s\n"),
 				yylineno, token);
 		lasm_ret = 0x61;
+		return 0;
+	TOKEN_END();
+
+	return _try_add_token(par, type, token);
+}
+
+int handle_directive(char *token, struct parser *par)
+{
+	enum token_type type;
+
+	TOKEN_START();
+	TOKEN(".global", DIRECTIVE);
+	TOKEN_DEFAULT();
+		fprintf(stderr, LERRL("Unexpected directive: %s\n"),
+				yylineno, token);
+		lasm_ret = 0x62;
 		return 0;
 	TOKEN_END();
 

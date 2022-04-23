@@ -16,5 +16,6 @@ int construct_un_cha(struct parser *par, int lineno);
 int construct_un_str(struct parser *par, int lineno);
 int construct_un_raw(struct parser *par, int lineno);
 int construct_bin_reg_reg(struct parser *par, int lineno);
+int construct_directive(struct parser *par, int lineno);
 
 #endif

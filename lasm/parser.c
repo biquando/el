@@ -94,6 +94,9 @@ int par_end_statement(struct parser *par, int lineno)
 	case BIN_REG_REG:
 		success = construct_bin_reg_reg(par, lineno);
 		break;
+	case DIRECTIVE:
+		success = construct_directive(par, lineno);
+		break;
 	default:
 		success = 0;
 		break;
