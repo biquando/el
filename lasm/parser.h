@@ -47,6 +47,7 @@ struct parser {
 struct parser *par_init();
 int par_add_token(struct parser *par, enum token_type type, char *text);
 int par_end_statement(struct parser *par, int lineno);
+struct symbol_entry *par_get_sym(struct parser *par, char *token);
 int par_set_global(struct parser *par, char *token);
 int par_add_symbol(struct parser *par, char *name, int value);
 int par_add_ref(struct parser *par, char *name, int size, int lineno);

@@ -109,22 +109,30 @@ int par_end_statement(struct parser *par, int lineno)
 	return success;
 }
 
+/* Returns NULL on fail */
+struct symbol_entry *par_get_sym(struct parser *par, char *token)
+{
+	struct symbol_entry *sym = NULL;
+	for (int s = 0; s < par->symbol_table->n_elems; s++) {
+		if (strncmp(
+					((struct symbol_entry *)
+					 vec_get(par->symbol_table, s))->name,
+					token,
+					strlen(token)
+			   ) == 0) {
+			sym = vec_get(par->symbol_table, s);
+			break;
+		}
+	}
+	return sym;
+}
+
 /* Returns 1 if success, 0 otherwise */
 int par_set_global(struct parser *par, char *token)
 {
 	if (token[0] == '$') {
 		struct symbol_entry *sym = NULL;
-		for (int s = 0; s < par->symbol_table->n_elems; s++) {
-			if (strncmp(
-					((struct symbol_entry *)
-					vec_get(par->symbol_table, s))->name,
-					token,
-					strlen(token)
-					) == 0) {
-				sym = vec_get(par->symbol_table, s);
-				break;
-			}
-		}
+		sym = par_get_sym(par, token);
 		if (!sym) {
 			return 0;
 		}
@@ -191,17 +199,7 @@ int par_resolve_refs(struct parser *par, struct ref_entry *err_ref)
 
 		struct symbol_entry *sym = NULL;
 		/* Find symbol with matching name */
-		for (int s = 0; s < par->symbol_table->n_elems; s++) {
-			if (strncmp(
-					((struct symbol_entry *)
-					vec_get(par->symbol_table, s))->name,
-					r->name,
-					strlen(r->name)
-					) == 0) {
-				sym = vec_get(par->symbol_table, s);
-				break;
-			}
-		}
+		sym = par_get_sym(par, r->name);
 		if (!sym) {
 			*err_ref = *r;
 			return 0;

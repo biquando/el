@@ -540,16 +540,15 @@ int construct_bin_reg_reg(struct parser *par, int lineno)
 
 int construct_directive(struct parser *par, int lineno)
 {
-	enum token_type t[] = {DIRECTIVE, SPACE, IMM};
+	enum token_type t1[] = {DIRECTIVE, SPACE, IMM};
+	enum token_type t2[] = {DIRECTIVE, SPACE, IMM, SPACE, IMM};
 	int tmp;
 	int failed = 0;
 	const char *dir;
-
-	if (!_match_structure(par, t, 3))
-		return 0;
+	struct symbol_entry *sym;
 
 	dir = par->statement[0].text;
-	if (strcmp(dir, ".global") == 0) {
+	if (_match_structure(par, t1, 3) && strcmp(dir, ".global") == 0) {
 		/* nop IMM */
 		failed |= !par_write_byte(par, 0xff);
 		tmp = _decode_imm(par, par->statement[2].text, 2, lineno);
@@ -558,6 +557,19 @@ int construct_directive(struct parser *par, int lineno)
 
 		/* set par->global */
 		failed |= !par_set_global(par, par->statement[2].text);
+	} else if (_match_structure(par, t2, 5) && strcmp(dir, ".const") == 0) {
+		if (par->statement[2].text[0] != '$')
+			return 0;
+
+		if (par->statement[4].text[0] == '$') {
+			sym = par_get_sym(par, par->statement[4].text);
+			if (!sym)
+				return 0;
+			tmp = sym->value;
+		} else {
+			tmp = strtol(par->statement[4].text, NULL, 0);
+		}
+		failed |= !par_add_symbol(par, par->statement[2].text, tmp);
 	} else {
 		failed = 1;
 	}

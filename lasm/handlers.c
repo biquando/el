@@ -7,20 +7,6 @@
 #include "lasm.h"
 #include "style.h"
 
-#define CHECK_SPACE() if (par->token_idx > 0 \
-		&& par->statement[par->token_idx - 1].type != SPACE) { \
-	fprintf(stderr, LERRL("Invalid token. Did you mean `%s`?\n"), \
-			yylineno, token); \
-	lasm_ret = 0x10 + UNKNOWN; \
-	return 0; \
-}
-
-#define INVALID_USE(name, type) \
-		fprintf(stderr, LERRL("Invalid use of "name" `%s`.\n"), \
-				yylineno, token); \
-		lasm_ret = 0x10 + type; \
-		return 0
-
 #define TOKEN_START() if (0) {
 #define TOKEN(ttext, ttype) } else if (strcmp(token, ttext) == 0) { type = ttype
 #define TOKEN_DEFAULT() } else {
@@ -128,18 +114,7 @@ int handle_macro(char *token, struct parser *par)
 
 int handle_directive(char *token, struct parser *par)
 {
-	enum token_type type;
-
-	TOKEN_START();
-	TOKEN(".global", DIRECTIVE);
-	TOKEN_DEFAULT();
-		fprintf(stderr, LERRL("Unexpected directive: %s\n"),
-				yylineno, token);
-		lasm_ret = 0x62;
-		return 0;
-	TOKEN_END();
-
-	return _try_add_token(par, type, token);
+	return _try_add_token(par, DIRECTIVE, token);
 }
 
 int handle_comment(char *token, struct parser *par)
