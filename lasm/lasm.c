@@ -7,6 +7,9 @@
 #include "style.h"
 
 int lasm_ret = 0;
+char **ifiles;
+int currfile;
+int numfiles;
 
 int main(int argc, char *argv[])
 {
@@ -40,18 +43,17 @@ int main(int argc, char *argv[])
 
 	/* Read non-option arguments */
 	nargs = argp_get_args(argp, argvals);
+	currfile = 0;
+	numfiles = nargs;
 	if (nargs > 0) {
-		yyin = fopen(argvals[0], "r");
+		ifiles = argvals;
+		yyin = fopen(ifiles[0], "r");
 		if (!yyin) {
 			fprintf(stderr, LERR("File does not exist: "
 					FITALIC"%s"FRESET"\n"), argvals[0]);
 			lasm_ret = 1;
 			goto cleanup;
 		}
-	}
-	if (nargs > 1) {
-		fprintf(stderr, LWARN("Only one FILE argument allowed. Using "
-				FITALIC"%s"FRESET"\n"), argvals[0]);
 	}
 
 	/* Initialize lexer */

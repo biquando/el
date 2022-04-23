@@ -4,6 +4,9 @@
 #include <stdio.h>
 
 extern int lasm_ret;
+extern char **ifiles;
+extern int currfile;
+extern int numfiles;
 
 int llex_init();
 void llex_set_state(int sc);

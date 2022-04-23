@@ -52,7 +52,20 @@ space [ \t]+
 
 %%
 
-int yywrap(void) {return 1;}
+int yywrap(void) {
+	if (++currfile >= numfiles) {
+		return 1;
+	}
+
+	yyin = fopen(ifiles[currfile], "r");
+	if (!yyin) {
+		fprintf(stderr, LERR("File does not exist: "
+				FITALIC"%s"FRESET"\n"), ifiles[currfile]);
+		lasm_ret = 1;
+		return 1;
+	}
+	return 0;
+}
 
 int llex_init()
 {

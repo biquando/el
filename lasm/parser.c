@@ -191,24 +191,31 @@ int par_write_byte(struct parser *par, unsigned char b)
 }
 
 /* Returns 1 if success, 0 otherwise */
-/* TODO: offset reference by placeholder value */
 int par_resolve_refs(struct parser *par, struct ref_entry *err_ref)
 {
 	for (int i = 0; i < par->ref_table->n_elems; i++) {
 		struct ref_entry *r = vec_get(par->ref_table, i);
 
 		struct symbol_entry *sym = NULL;
+		int symval;
+		int offset;
 		/* Find symbol with matching name */
 		sym = par_get_sym(par, r->name);
 		if (!sym) {
 			*err_ref = *r;
 			return 0;
 		}
+		symval = sym->value;
+
+		/* Offset symval by buffer placeholder value */
+		offset = *((int *)vec_get(par->out_buf, r->location));
+		//fprintf(stderr, "	offset:%x\n", offset);
+		symval += offset;
 
 		for (int b = 0; b < r->size; b++) {
 			unsigned char *p = vec_get(par->out_buf,
 					r->location + b);
-			*p = (unsigned char) (sym->value >> (8 * b));
+			*p = (unsigned char) (symval >> (8 * b));
 		}
 	}
 
