@@ -1,0 +1,26 @@
+load, store, mod, cond, sig, nop
+nonary, unary reg, unary imm, unary cha, unary str, unary raw, binary reg reg
+imm addr, abs addr
+reg, imm
+unary op, binary op
+condition
+unval sig, val sig
+
+load - imm addr - reg - imm
+load - abs addr - reg
+store - abs addr - reg
+mod - reg - unary op
+mod - reg - binary op - reg
+cond - condition
+sig - unval sig
+sig - val sig - imm
+nop
+nop - imm
+nonary
+unary reg - reg
+unary imm - imm
+unary cha - cha
+unary cha - imm
+unary str - str
+unary raw - raw
+binary reg reg - reg - reg
