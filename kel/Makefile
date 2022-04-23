@@ -11,8 +11,8 @@ all: mkdirs $(BIN)
 mkdirs:
 	mkdir -p bin
 
-bin/%: src/%.l
-	$(LASM) $< -m $(MAP) -o $@
+bin/%: src/%.lasm
+	$(LASM) $(MAP) $< -o $@
 
 run: all
 	$(EL) $(BIN)

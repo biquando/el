@@ -7,7 +7,7 @@
 // Returns:
 //   addr     address of the array stored in local space
 
-GLOBAL $TEST_PROC_L_GL
+.global $TEST_PROC_L_GL
 
 $_main
     // 'size' - 1 -> rc

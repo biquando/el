@@ -5,7 +5,7 @@
 //   2. size        Size in bytes of the local space body
 //   3. proc_args*  Arguments to pass into the process routine
 
-GLOBAL $_SPAWN_GL
+.global $_SPAWN_GL
 nop $_SPAWN_ID
 
 $_main

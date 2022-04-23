@@ -1,7 +1,7 @@
 // [Boot]
 //   Boot the kernel.
 
-GLOBAL $_BOOT_GL
+.global $_BOOT_GL
 nop $_BOOT_ID
 
 $_guard

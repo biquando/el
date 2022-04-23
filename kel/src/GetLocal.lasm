@@ -3,7 +3,7 @@
 // Returns:
 //   loc    address of the currrent local space body
 
-GLOBAL $_GET_LOCAL_GL
+.global $_GET_LOCAL_GL
 nop $_GET_LOCAL_ID
 
 load # rar $_GL_SPACE_HEAD

@@ -1,25 +1,25 @@
 // Stack
-$_STACK  0xF000
+.const $_STACK  0xF000
 
 // Global space
-$_GL_SPACE_HEAD   0x8000
-$_MAX_PROC_DEPTH  31
+.const $_GL_SPACE_HEAD   0x8000
+.const $_MAX_PROC_DEPTH  31
 
 // [Boot]
-$_BOOT_GL  0x0000
-$_BOOT_ID  0x1
+.const $_BOOT_GL  0x0000
+.const $_BOOT_ID  0x1
 
 // [Spawn]
-$_SPAWN_GL  0x1000
-$_SPAWN_ID  0x11
+.const $_SPAWN_GL  0x1000
+.const $_SPAWN_ID  0x11
 
 // [Term]
-$_TERM_GL  0x1100
-$_TERM_ID  0x12
+.const $_TERM_GL  0x1100
+.const $_TERM_ID  0x12
 
 // [GetLocal]
-$_GET_LOCAL_GL  0x1200
-$_GET_LOCAL_ID  0x13
+.const $_GET_LOCAL_GL  0x1200
+.const $_GET_LOCAL_ID  0x13
 
 // Testing
-$TEST_PROC_L_GL  0x2000
+.const $TEST_PROC_L_GL  0x2000
