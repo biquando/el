@@ -12,6 +12,7 @@ struct parser *par_init()
 		return NULL;
 
 	par->token_idx = 0;
+	par->global = 0;
 
 	par->symbol_table = vec_init(sizeof(struct symbol_entry),
 			BUF_DEFAULT_SIZE);
@@ -103,6 +104,34 @@ int par_end_statement(struct parser *par, int lineno)
 	}
 	par->token_idx = 0;
 	return success;
+}
+
+/* Returns 1 if success, 0 otherwise */
+int par_set_global(struct parser *par, char *token)
+{
+	if (token[0] == '$') {
+		struct symbol_entry *sym = NULL;
+		for (int s = 0; s < par->symbol_table->n_elems; s++) {
+			if (strncmp(
+					((struct symbol_entry *)
+					vec_get(par->symbol_table, s))->name,
+					token,
+					strlen(token)
+					) == 0) {
+				sym = vec_get(par->symbol_table, s);
+				break;
+			}
+		}
+		if (!sym) {
+			return 0;
+		}
+
+		par->global = sym->value;
+		return 1;
+	}
+
+	par->global = strtol(token, NULL, 0);
+	return 1;
 }
 
 /* Returns 1 if success, 0 otherwise */

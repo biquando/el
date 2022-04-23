@@ -407,6 +407,9 @@ int construct_un_imm(struct parser *par, int lineno)
 		tmp = _decode_imm(par, par->statement[2].text, 2, lineno);
 		failed |= !par_write_byte(par, tmp);
 		failed |= !par_write_byte(par, tmp >> 8);
+
+		/* set par->global */
+		failed |= !par_set_global(par, par->statement[2].text);
 	} else if (strcmp(macro, "GOTO") == 0) {
 		failed |= !par_write_byte(par, 0x17);
 

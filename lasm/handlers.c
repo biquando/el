@@ -102,7 +102,6 @@ int handle_macro(char *token, struct parser *par)
 {
 	enum token_type type;
 
-	/* TODO: implement GLOBAL macro */
 	TOKEN_START();
 	TOKEN("RET", NON);
 	TOKEN("PSH", UN_REG);
@@ -136,7 +135,8 @@ int handle_comment(char *token, struct parser *par)
 int handle_label(char *token, struct parser *par)
 {
 	if (par->token_idx == 0)
-		return _try_add_symbol(par, token, par->out_buf->n_elems);
+		return _try_add_symbol(par, token,
+				par->out_buf->n_elems + par->global);
 
 	return _try_add_token(par, IMM, token);
 }

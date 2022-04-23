@@ -62,12 +62,12 @@ int main(int argc, char *argv[])
 		goto cleanup;
 	}
 	yylex();
-
-cleanup:
-	fclose(yyin);
+	llex_end();
 	argp_free(argp);
 	free(argvals);
-	llex_end();
+
+cleanup:
 	fclose(ofile);
+	fclose(yyin);
 	return lasm_ret;
 }
