@@ -11,7 +11,7 @@ static FILE *ofile;
 
 instr load|store|mod|cond|sig|nop
 macro GOTO|RAW|INT|CHA|STR|PSH|POP|CALL|RET|INC|DEC|TRA
-directive .(global|const)
+directive \.(global|const)
 comment \/\/.*$
 label \$[a-zA-Z0-9_]+
 number ([0-9]+)|(0x[0-9a-fA-F]+)
